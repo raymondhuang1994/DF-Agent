@@ -1,6 +1,8 @@
 """Release regressions: real checkouts, excluded metadata, reproducible archives."""
 import importlib.util
 from pathlib import Path
+import shutil
+import subprocess
 import tempfile
 import unittest
 import zipfile
@@ -12,6 +14,23 @@ spec.loader.exec_module(release)
 
 
 class ReleaseTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("git"), "Git is required to verify checkout byte preservation")
+    def test_git_checkout_preserves_fingerprints_with_windows_autocrlf(self):
+        with tempfile.TemporaryDirectory(dir=ROOT.parent) as area:
+            base = Path(area)
+            source, checkout = base / "source", base / "checkout"
+            source.mkdir()
+            (source / ".gitattributes").write_bytes((ROOT / ".gitattributes").read_bytes())
+            payload = "合成插件资源\nsecond line\n".encode("utf-8")
+            (source / "entry.txt").write_bytes(payload)
+            def git(*args, cwd=source):
+                subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, timeout=30)
+            git("init", "--quiet")
+            git("add", ".")
+            git("-c", "user.name=Synthetic Test", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "fixture")
+            git("-c", "core.autocrlf=true", "clone", "--quiet", str(source), str(checkout), cwd=base)
+            self.assertEqual((checkout / "entry.txt").read_bytes(), payload)
+
     def test_git_checkouts_and_worktrees_are_accepted_without_metadata(self):
         for directory in (True, False):
             with self.subTest(directory=directory), tempfile.TemporaryDirectory(dir=ROOT.parent) as area:

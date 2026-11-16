@@ -1,4 +1,4 @@
-# TeamAdvisor · 团队顾问 0.3.0
+# TeamAdvisor · 团队顾问 0.3.1
 
 在当前 Windows 桌面软件的本地会话中，选择并衔接已安装的 DataLab、df-mcp 和 ETF 评论草稿 v2。本插件提供顾问入口、本机配置、任务质量反馈及有来源的个人/项目记忆；专业技能继续使用每台电脑现有的安装。
 
@@ -15,7 +15,7 @@
 
 已有输入足够就省略检索，不需要计算就省略 DataLab。缺少某项技能时说明缺项，继续可独立完成的步骤。首次设置与后续自检由顾问处理；本地配置变化会重新检查。
 
-## 0.3.0 新增能力
+## 0.3.1 新增能力
 
 | 能力 | 行为 |
 |---|---|
@@ -43,7 +43,7 @@ codex plugin add team-advisor-entry@team-advisor-pilot --json
 ```powershell
 python -X utf8 -B -m unittest discover -s tests -v
 python -X utf8 -B tools/check_package.py
-python -X utf8 -B tools/check_package.py --zip '<项目外目录>\TeamAdvisor-Entry-Source-0.3.0.zip' --plugin-zip '<项目外目录>\TeamAdvisor-Entry-0.3.0.zip'
+python -X utf8 -B tools/check_package.py --zip '<项目外目录>\TeamAdvisor-Entry-Source-0.3.1.zip' --plugin-zip '<项目外目录>\TeamAdvisor-Entry-0.3.1.zip'
 ```
 
 GitHub Actions 已配置相同的 Windows 回归和发布检查。工作流文件存在不代表远端 CI 已运行。

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "release": "team-advisor-entry/0.3.0",
+  "release": "team-advisor-entry/0.3.1",
   "created_on": "2026-11-16",
   "original_handoff": {
     "filename": "TeamAdvisor-Windows-Development-Handoff-2026-11-16.zip",
@@ -13,7 +13,8 @@
     "Local reader integration and independent DataLab runtime validated against synthetic sources only.",
     "Persistent per-machine setup with source/runtime drift detection.",
     "Explicit scoped feedback and reviewed personal/project memory with expiry, supersession, rollback and deletion.",
-    "Real local plugin installation, native discovery in a fresh CLI session, and held-out memory-guided synthetic task."
+    "Real local plugin installation, native discovery in a fresh CLI session, and held-out memory-guided synthetic task.",
+    "Pin LF endings across Git checkouts so Windows autocrlf cannot invalidate exact-byte fingerprints."
   ],
   "professional_sources": {
     "data-lab": {
@@ -80,8 +81,8 @@
     }
   },
   "entry_files_sha256": {
-    ".codex-plugin/plugin.json": "311a4d25b731dcc11df7aeac5ac1df403b6c6f0fad9699874585d41d24518726",
-    "plugin.json": "06f2ae7d1fe6d2ecf60fe60fd3d9b1bba1a3d946cd3c26423186296a30997c3c",
+    ".codex-plugin/plugin.json": "2082101ba8714447ea4299acf0395348be4fa1719a50ab14592bb05c6366594a",
+    "plugin.json": "e3262ad63c70e19b2d0cba229bce896b6b6ad0f44e0cde52017920b0e10af72a",
     "skills/team-advisor/agents/openai.yaml": "e8a6e17e3c41773f7ba7a6205b9e937377b725e1e99767ad92f7f23c20d4acde",
     "skills/team-advisor/references/catalog.md": "6b7e98a0363684cb5a433b8d35036f1ea2bf799c7dff751974934576c9ce8b31",
     "skills/team-advisor/references/handoff.md": "d7220396c16224323b59d3dd49b04a4551856121e87979de57f032e9d680c82f",
@@ -91,14 +92,14 @@
     "skills/team-advisor/references/quality.md": "8f68908d84d8d9f47d59578db58f191841c864effa665c9870e54cfd961edba4",
     "skills/team-advisor/references/runtime.md": "6c459b48ce675f68cb03212638f55cf5d56a67ade5962878d234a2c742558302",
     "skills/team-advisor/references/setup.md": "0497faa603164734c9ca59e84317c23a62ad0bb3356e36baebfca257d34ef623",
-    "skills/team-advisor/references/sources-and-capabilities.md": "8b5dfbd61c7cfa6b76faf35b45d8c86e57f273dbee811dae9af85f4b74bb6a04",
+    "skills/team-advisor/references/sources-and-capabilities.md": "d7ee34e02a34dea4bb389acb9c7e51f078a6dfdef084e36ecf9126775875b77b",
     "skills/team-advisor/scripts/doctor.ps1": "b80cc57a65dd12a411b5aec50ebca8a48a49f6f602acbcf9502398ef1b9afad9",
     "skills/team-advisor/scripts/doctor.py": "29cb5040c2068f554a53eb41fb9f222e6d29c986942828c34a77d4b0302babb1",
     "skills/team-advisor/scripts/feedback.py": "85faf06d1902a9d1e0cb36af20aa3d604a3d3d8e2e27874409658d1cee4643fe",
     "skills/team-advisor/scripts/memory.py": "9f3757c8750a5eba718d761de1138bfd4f657f30b6914419ffe0f9926a346365",
     "skills/team-advisor/scripts/setup.ps1": "b79feae1ec7b88969c06b00e6a3b1eeb9a27457a8672c3411ef5de3d48ea2097",
     "skills/team-advisor/scripts/setup.py": "29f1406ed94827513b993273abf3c4fecf1f04c0db23d582456c395e06568072",
-    "skills/team-advisor/SKILL.md": "c0cbf41fa8691723db001644cd039b8ec405adc91dd079aaf0bd80f6db395d37"
+    "skills/team-advisor/SKILL.md": "56d421a6c1aa1801fb5fe973944f6a750c7b7591a902f80235fd40d4fa4d02ab"
   },
   "notes": [
     "Professional skill code and proprietary data are not redistributed in this release.",

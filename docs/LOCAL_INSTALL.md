@@ -1,4 +1,4 @@
-# 安装 TeamAdvisor 0.3.0
+# 安装 TeamAdvisor 0.3.1
 
 目标是用户当前使用的 Windows 桌面软件。已在应用 26.1106.51428（构建 26605）随附 CLI 中实际安装、启用，并由新临时会话原生发现入口。已有三项专业技能保持原安装。
 
@@ -7,7 +7,7 @@
 仓库：[raymondhuang1994/TeamAdvisor](https://github.com/raymondhuang1994/TeamAdvisor)。当前为私有仓库，安装者需要仓库读取权限和自己的 GitHub 登录；共享插件不共享本机记忆与业务资料权限。
 
 ```powershell
-codex plugin marketplace add https://github.com/raymondhuang1994/TeamAdvisor.git --ref v0.3.0 --json
+codex plugin marketplace add https://github.com/raymondhuang1994/TeamAdvisor.git --ref v0.3.1 --json
 codex plugin add team-advisor-entry@team-advisor-pilot --json
 ```
 

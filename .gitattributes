@@ -1,0 +1,2 @@
+# Plugin fingerprints must survive Windows and Unix Git checkouts byte-for-byte.
+* text eol=lf
