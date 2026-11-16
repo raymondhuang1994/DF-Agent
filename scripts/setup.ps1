@@ -10,5 +10,5 @@ param(
     [string]$SessionId = 'unspecified'
 )
 $ErrorActionPreference = 'Stop'
-$EntrySetup = Join-Path $PSScriptRoot '../plugins/team-advisor-entry/skills/team-advisor/scripts/setup.ps1'
+$EntrySetup = Join-Path $PSScriptRoot '../plugins/df-agent/skills/df-agent/scripts/setup.ps1'
 & $EntrySetup @PSBoundParameters

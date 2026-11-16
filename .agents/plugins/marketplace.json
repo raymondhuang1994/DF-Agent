@@ -1,14 +1,14 @@
 {
-  "name": "team-advisor-pilot",
+  "name": "df-agent",
   "interface": {
-    "displayName": "团队顾问试点"
+    "displayName": "DF Agent"
   },
   "plugins": [
     {
-      "name": "team-advisor-entry",
+      "name": "df-agent",
       "source": {
         "source": "local",
-        "path": "./plugins/team-advisor-entry"
+        "path": "./plugins/df-agent"
       }
     }
   ]

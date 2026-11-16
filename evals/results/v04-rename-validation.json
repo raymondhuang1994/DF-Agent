@@ -1,0 +1,21 @@
+{
+  "observed_on": "2026-11-16",
+  "release": "df-agent/0.4.0",
+  "display_name": "DF Agent",
+  "repository": "https://github.com/raymondhuang1994/DF-Agent",
+  "visibility": "public",
+  "plugin_id": "df-agent@df-agent",
+  "native_skill_name": "df-agent:df-agent",
+  "native_skill_source": "PLUGIN_CACHE/df-agent/df-agent/0.4.0/skills/df-agent/SKILL.md",
+  "installed": true,
+  "enabled": true,
+  "fresh_cli_native_discovery": true,
+  "unit_tests": {"run": 85, "passed": 84, "skipped": 1},
+  "setup_tests_passed": 18,
+  "legacy_config_reused": true,
+  "legacy_config_bytes_unchanged": true,
+  "state_migrated": false,
+  "old_plugin_removed_after_verification": true,
+  "organization_import_tested": false,
+  "colleague_machines_tested": false
+}

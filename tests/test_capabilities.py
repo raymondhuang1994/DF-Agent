@@ -13,7 +13,7 @@ from unittest.mock import patch
 from datetime import datetime, timedelta, timezone
 
 PROJECT = Path(__file__).resolve().parents[1]
-SCRIPT = PROJECT / "plugins/team-advisor-entry/skills/team-advisor/scripts/doctor.py"
+SCRIPT = PROJECT / "plugins/df-agent/skills/df-agent/scripts/doctor.py"
 SPEC = importlib.util.spec_from_file_location("advisor_doctor", SCRIPT)
 doctor = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(doctor)

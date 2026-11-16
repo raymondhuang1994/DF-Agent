@@ -1,4 +1,4 @@
-# 本机能力检测与证据合并
+# DF Agent 本机能力检测与证据合并
 
 检测器只读取明确技能根目录的一层子目录、`SKILL.md` 和代码中列出的公共资源。每根最多 256 个直接条目、每文件最多 2 MB、最多 16 个根；超过限制会保留覆盖缺口。不会递归搜索、跟随符号链接或 Windows 重解析点、查找私库、读取凭据、运行专业技能脚本、连接资料库或修复环境。
 
@@ -12,12 +12,12 @@
 & ./scripts/doctor.ps1 -Roots $ApprovedSkillRoots -OutputPath $NewReportPath -PythonPath $TaskPython -EnvironmentPath $ObservedEnvironmentJson -SessionId 'local-pilot-session-01'
 ```
 
-仅安装入口插件时，使用插件内 `skills/team-advisor/scripts/doctor.ps1`，无需仓库根包装器。多个根在 PowerShell 中传入字符串数组。脚本用参数数组传递路径，不使用命令字符串求值；中文、空格和通配符字符按字面路径处理。输出必须位于技能根之外，且文件名未存在；每次生成新报告，保留上一份。
+仅安装入口插件时，使用插件内 `skills/df-agent/scripts/doctor.ps1`，无需仓库根包装器。多个根在 PowerShell 中传入字符串数组。脚本用参数数组传递路径，不使用命令字符串求值；中文、空格和通配符字符按字面路径处理。输出必须位于技能根之外，且文件名未存在；每次生成新报告，保留上一份。
 
 Python 等价入口：
 
 ```text
-python -X utf8 -B plugins/team-advisor-entry/skills/team-advisor/scripts/doctor.py scan --roots ROOT_PATH_1 ROOT_PATH_2 --output NEW_REPORT_PATH --python TASK_PYTHON --environment OBSERVED_ENVIRONMENT_JSON --session-id local-pilot-session-01
+python -X utf8 -B plugins/df-agent/skills/df-agent/scripts/doctor.py scan --roots ROOT_PATH_1 ROOT_PATH_2 --output NEW_REPORT_PATH --python TASK_PYTHON --environment OBSERVED_ENVIRONMENT_JSON --session-id local-pilot-session-01
 ```
 
 `config/environment.example.json` 是当前会话观察的字段模板，未知值保持 `unknown`。实际执行环境和本次文件访问由检测器填写。`--session-id` 由验收者为本轮会话设置，换电脑、会话或权限范围时更换；默认 `unspecified` 只允许静态报告，不能合入宿主/任务通过结论。
@@ -28,7 +28,7 @@ python -X utf8 -B plugins/team-advisor-entry/skills/team-advisor/scripts/doctor.
 
 ## 报告含义
 
-核心字段沿用 `team-advisor-capabilities/1`：文件、宿主发现、资源、依赖、烟雾测试五层，各为 `passed` / `failed` / `not_checked` / `not_applicable` / `unknown`。只有完整必要检查通过，具体任务才为 `execution_ready=true`。`false` 表示已观察的必要条件失败；没有证据时为 `null`。本脚本不会自行把 `host_discovery` 或 `smoke_test` 设为通过。
+为兼容已有报告，内部 schema 标识继续使用 `team-advisor-capabilities/1`（产品显示名为 DF Agent；见 [改名与兼容说明](RENAME_0.4.0.md)）。核心检查项为：文件、宿主发现、资源、依赖、烟雾测试五层，各为 `passed` / `failed` / `not_checked` / `not_applicable` / `unknown`。只有完整必要检查通过，具体任务才为 `execution_ready=true`。`false` 表示已观察的必要条件失败；没有证据时为 `null`。本脚本不会自行把 `host_discovery` 或 `smoke_test` 设为通过。
 
 当前任务范围：
 
@@ -73,7 +73,7 @@ Python 包版本与安装 Skill 的公开 `requirements.txt` 比较；可解析�
 时间填写实际观察时间。合并为每个检查项保存 `observed_at`；默认采用证据批次时间，也可在检查项内明确更早的观察时间。已有检查只接受同刻相同状态或更晚的观察；较旧的通过不能覆盖较新的失败，同刻矛盾也会拒绝。不同检查项独立比较，因此首次烟雾测试可以早于静态报告或另一项宿主观察。检查时间不能晚于其证据批次，未来超过本机当前 UTC 60 秒的观察会拒绝。旧版已合入宿主/烟雾测试结果但缺少逐项时间的报告需重新观察；纯静态旧报告仍可合并。
 
 ```text
-python -X utf8 -B plugins/team-advisor-entry/skills/team-advisor/scripts/doctor.py merge-evidence --report REPORT_PATH --evidence OBSERVED_EVIDENCE_PATH --roots ROOT_PATH_1 --python TASK_PYTHON --output NEW_MERGED_REPORT_PATH
+python -X utf8 -B plugins/df-agent/skills/df-agent/scripts/doctor.py merge-evidence --report REPORT_PATH --evidence OBSERVED_EVIDENCE_PATH --roots ROOT_PATH_1 --python TASK_PYTHON --output NEW_MERGED_REPORT_PATH
 ```
 
 合并前会重新读显式根、公共资源和解释器元数据。来源、候选集合、范围、会话、环境或运行时不一致时拒绝沿用；应重新采集受影响的观察。`scan --host-evidence` / `-HostEvidencePath` 也支持同一契约，用于同轮、同范围、来源和依赖未变时的重复采集。准备证据不等于执行测试；工具只能检查一致性，不能证明观察者文字真实。
@@ -81,7 +81,7 @@ python -X utf8 -B plugins/team-advisor-entry/skills/team-advisor/scripts/doctor.
 日志/证据只使用测试编号、别名和结果摘要。共享报告会拒绝个人绝对路径；不要放业务正文、私库案例、凭据或连接令牌。
 
 ```text
-python -X utf8 -B plugins/team-advisor-entry/skills/team-advisor/scripts/doctor.py validate --report REPORT_PATH
+python -X utf8 -B plugins/df-agent/skills/df-agent/scripts/doctor.py validate --report REPORT_PATH
 ```
 
 `validate` 仅检查结构和内部一致性，不重新访问来源。成功生成含失败项的检测报告退出码仍为 0；检测器自身出错退出码为 2。源文件保护来自参数边界、链接检查和新建输出约束，不宣称提供 OS 级沙箱或阻止其他进程并发修改文件。

@@ -13,10 +13,12 @@ $ErrorActionPreference = 'Stop'
 function Assert-NoReparsePoint([string]$LiteralPath) {
     $CandidatePath = [System.IO.Path]::GetFullPath($LiteralPath)
     while ($CandidatePath) {
-        if (Test-Path -LiteralPath $CandidatePath) {
-            $CandidateItem = Get-Item -LiteralPath $CandidatePath -Force
+        $CandidateItem = $null
+        try { $CandidateItem = Get-Item -LiteralPath $CandidatePath -Force -ErrorAction Stop }
+        catch [System.Management.Automation.ItemNotFoundException] { }
+        if ($null -ne $CandidateItem) {
             if ($CandidateItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
-                throw 'TeamAdvisor setup paths must not traverse links or reparse points.'
+                throw 'DF Agent setup paths must not traverse links or reparse points.'
             }
         }
         $CandidatePath = [System.IO.Path]::GetDirectoryName($CandidatePath)
@@ -24,13 +26,22 @@ function Assert-NoReparsePoint([string]$LiteralPath) {
 }
 if (-not $StateDir) {
     if (-not $env:LOCALAPPDATA) { throw 'Supply -StateDir; LOCALAPPDATA is unavailable.' }
-    $StateDir = Join-Path $env:LOCALAPPDATA 'TeamAdvisor'
+    $StateDir = Join-Path $env:LOCALAPPDATA 'DF-Agent'
+    $DefaultConfigPath = Join-Path $StateDir 'setup.local.json'
+    Assert-NoReparsePoint $DefaultConfigPath
+    if (-not (Test-Path -LiteralPath $DefaultConfigPath -PathType Leaf)) {
+        # Reuse a pre-rename installation in place; do not copy or reset its state.
+        $LegacyStateDir = Join-Path $env:LOCALAPPDATA 'TeamAdvisor'
+        $LegacyConfigPath = Join-Path $LegacyStateDir 'setup.local.json'
+        Assert-NoReparsePoint $LegacyConfigPath
+        if (Test-Path -LiteralPath $LegacyConfigPath -PathType Leaf) { $StateDir = $LegacyStateDir }
+    }
 }
 $SetupScript = Join-Path $PSScriptRoot 'setup.py'
 $ConfigPath = Join-Path $StateDir 'setup.local.json'
 Assert-NoReparsePoint $ConfigPath
 if (-not $PythonPath -and (Test-Path -LiteralPath $ConfigPath -PathType Leaf)) {
-    # Read only the dedicated TeamAdvisor setting, never other app profiles.
+    # Read only the selected DF Agent setting, never other app profiles.
     $SavedSetup = Get-Content -LiteralPath $ConfigPath -Raw -Encoding utf8 | ConvertFrom-Json
     if ($SavedSetup.schema_version -ne 'team-advisor-setup/1') { throw 'Unsupported saved setup schema.' }
     $PythonPath = [string]$SavedSetup.python
@@ -62,4 +73,4 @@ switch ($Action) {
     }
 }
 & $PythonPath @SetupArguments
-if ($LASTEXITCODE -ne 0) { throw "TeamAdvisor setup failed (exit $LASTEXITCODE)." }
+if ($LASTEXITCODE -ne 0) { throw "DF Agent setup failed (exit $LASTEXITCODE)." }

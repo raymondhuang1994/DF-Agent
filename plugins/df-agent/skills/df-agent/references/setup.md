@@ -1,6 +1,8 @@
 # 首次配置与跨会话复用
 
-用户说“初始化团队顾问”或首次调用所需能力时使用。Windows 默认状态位置为 `%LOCALAPPDATA%\TeamAdvisor`；PowerShell 接口允许 `-StateDir` 指定其他位置，Python 接口要求显式 `--state-dir`。只检查这一个已选 TeamAdvisor 目录，不搜索其他应用的配置、聊天或业务来源。用户已有明确设置范围和授权时可以直接完成；`plan`/`apply` 是可审阅和防过期机制，不要求每次重新询问权限。
+用户说“初始化 DF Agent”或首次调用所需能力时使用。Windows 新安装默认状态位置为 `%LOCALAPPDATA%\DF-Agent`；PowerShell 接口允许 `-StateDir` 指定其他位置，Python 接口要求显式 `--state-dir`。只检查明确选中的本地状态，不搜索其他应用的配置、聊天或业务来源。用户已有明确设置范围和授权时可以直接完成；`plan`/`apply` 是可审阅和防过期机制，不要求每次重新询问权限。
+
+改名前已配置的电脑保持兼容：未提供 `-StateDir` 时，优先使用 `DF-Agent\setup.local.json`；它不存在而旧目录 `%LOCALAPPDATA%\TeamAdvisor\setup.local.json` 存在时，直接沿用旧目录中的配置。两处都没有配置则选择新的 `DF-Agent` 目录；两处都有配置则新目录优先。明确的 `-StateDir` 始终优先。这个选择只判断两份专用配置是否存在，不合并、迁移、重置配置或读取记忆正文。后续记忆和反馈应沿用返回的实际 `state_dir`，不要仅因改名创建第二份数据。原有配置的 schema 标识保持兼容；名称变化不改变数据格式。
 
 ## 日常入口
 

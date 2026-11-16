@@ -255,7 +255,7 @@ def main():
                       "native_checks_status": checks["checks_status"], "native_status": checks["status"]}
     if not (target / "analysis-verification.json").exists():
         new_json(target / "analysis-verification.json", observed_check)
-    public_cases = project / "plugins" / "team-advisor-entry" / "skills" / "team-advisor" / "references" / "public-examples" / "cases.jsonl"
+    public_cases = project / "plugins" / "df-agent" / "skills" / "df-agent" / "references" / "public-examples" / "cases.jsonl"
     public_profile = public_cases.with_name("profile.json")
     if not public_cases.is_file() or not public_profile.is_file():
         raise RuntimeError("Explicit public style fixture is incomplete")

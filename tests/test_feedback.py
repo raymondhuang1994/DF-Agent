@@ -10,7 +10,7 @@ import tempfile
 import unittest
 
 PROJECT = Path(__file__).resolve().parents[1]
-SCRIPT = PROJECT / "plugins/team-advisor-entry/skills/team-advisor/scripts/feedback.py"
+SCRIPT = PROJECT / "plugins/df-agent/skills/df-agent/scripts/feedback.py"
 SPEC = importlib.util.spec_from_file_location("advisor_feedback", SCRIPT)
 feedback = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(feedback)

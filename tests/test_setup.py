@@ -12,7 +12,7 @@ import unittest
 from unittest.mock import patch
 
 PROJECT = Path(__file__).resolve().parents[1]
-SCRIPT = PROJECT / "plugins/team-advisor-entry/skills/team-advisor/scripts/setup.py"
+SCRIPT = PROJECT / "plugins/df-agent/skills/df-agent/scripts/setup.py"
 SPEC = importlib.util.spec_from_file_location("advisor_setup", SCRIPT)
 setup = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(setup)
@@ -185,7 +185,7 @@ class SetupTests(unittest.TestCase):
         if os.name != "nt" or not powershell:
             self.skipTest("Native Windows PowerShell not available")
         appdata = self.base / "isolated local appdata"
-        state = appdata / "TeamAdvisor"
+        state = appdata / "DF-Agent"
         plan = setup.make_plan(state, [self.root], sys.executable)
         setup.apply_plan(state, plan)
         env = dict(os.environ, LOCALAPPDATA=str(appdata))
@@ -194,6 +194,68 @@ class SetupTests(unittest.TestCase):
         report = json.loads(result.stdout)
         self.assertEqual(report["state_dir"], str(state))
         self.assertEqual(report["python"], str(Path(sys.executable)))
+        self.assertEqual(report["status"], "unchanged")
+
+    def windows_status(self, appdata, *arguments):
+        powershell = shutil.which("pwsh")
+        if os.name != "nt" or not powershell:
+            self.skipTest("Native Windows PowerShell not available")
+        return subprocess.run([powershell, "-NoProfile", "-File", str(PROJECT / "scripts/setup.ps1"),
+                               "-Action", "Status", *map(str, arguments)], capture_output=True,
+                              text=True, encoding="utf-8", env=dict(os.environ, LOCALAPPDATA=str(appdata)), timeout=30)
+
+    def test_fresh_default_uses_df_agent_without_creating_state(self):
+        appdata = self.base / "fresh appdata"
+        run = self.windows_status(appdata, "-PythonPath", sys.executable)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        report = json.loads(run.stdout)
+        self.assertEqual(report["state_dir"], str(appdata / "DF-Agent"))
+        self.assertEqual(report["status"], "not_configured")
+        self.assertFalse(appdata.exists())
+
+    def test_legacy_default_keeps_saved_bindings_and_memory_in_place(self):
+        appdata = self.base / "legacy appdata"
+        state = appdata / "TeamAdvisor"
+        setup.apply_plan(state, setup.make_plan(state, [self.root], sys.executable))
+        (state / "memory").mkdir()
+        (state / "memory" / "synthetic-record.txt").write_text("保留原项目记忆", encoding="utf-8")
+        before = {str(p.relative_to(state)): p.read_bytes() for p in state.rglob("*") if p.is_file()}
+        run = self.windows_status(appdata)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        report = json.loads(run.stdout)
+        self.assertEqual(report["state_dir"], str(state))
+        self.assertEqual(report["python"], str(Path(sys.executable)))
+        self.assertEqual(report["status"], "unchanged")
+        self.assertEqual(report["bindings"]["preferred_sources"]["etf-comment-drafts-v2"], "ROOT_1/etf-comment-drafts-v2/SKILL.md")
+        self.assertEqual({str(p.relative_to(state)): p.read_bytes() for p in state.rglob("*") if p.is_file()}, before)
+        self.assertFalse((appdata / "DF-Agent").exists())
+
+    def test_new_default_wins_when_both_configurations_exist(self):
+        appdata = self.base / "both appdata"
+        state = appdata / "DF-Agent"
+        setup.apply_plan(state, setup.make_plan(state, [self.root], sys.executable))
+        legacy = appdata / "TeamAdvisor"
+        legacy.mkdir()
+        # An obsolete/corrupt legacy setting must not affect a valid new one.
+        (legacy / setup.CONFIG_NAME).write_text("obsolete synthetic setting", encoding="utf-8")
+        run = self.windows_status(appdata)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        report = json.loads(run.stdout)
+        self.assertEqual(report["state_dir"], str(state))
+        self.assertEqual(report["status"], "unchanged")
+        self.assertEqual((legacy / setup.CONFIG_NAME).read_text("utf-8"), "obsolete synthetic setting")
+
+    def test_explicit_state_wins_without_reading_default_configs(self):
+        appdata = self.base / "defaults appdata"
+        for name in ("DF-Agent", "TeamAdvisor"):
+            state = appdata / name
+            state.mkdir(parents=True)
+            (state / setup.CONFIG_NAME).write_text("default should not be read", encoding="utf-8")
+        setup.apply_plan(self.state, setup.make_plan(self.state, [self.root], sys.executable))
+        run = self.windows_status(appdata, "-StateDir", self.state)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        report = json.loads(run.stdout)
+        self.assertEqual(report["state_dir"], str(self.state))
         self.assertEqual(report["status"], "unchanged")
 
     def test_windows_state_junction_is_rejected_before_config_read(self):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Persist explicitly selected local TeamAdvisor roots and runtime; no installation."""
+"""Persist explicitly selected local DF Agent roots and runtime; no installation."""
 from __future__ import annotations
 
 import argparse

@@ -17,8 +17,8 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-PLUGIN = Path("plugins/team-advisor-entry")
-SKILL = PLUGIN / "skills/team-advisor"
+PLUGIN = Path("plugins/df-agent")
+SKILL = PLUGIN / "skills/df-agent"
 FORBIDDEN_DIRS = {".venv", "venv", "__pycache__", "node_modules", "private", "validation-local"}
 FORBIDDEN_NAMES = {".env", ".DS_Store", "auth.json", "credentials.json", "config.local.json",
                    "memory.json", "feedback.json", "memory.lock", ".feedback.lock", ".setup.lock"}
@@ -99,15 +99,15 @@ def check(root: Path = ROOT) -> tuple[list[Path], list[str], dict]:
         for field in ("name", "version", "description"):
             if manifest.get(field) != compat.get(field):
                 errors.append(f"Manifest mismatch: {field}")
-        if manifest.get("name") != "team-advisor-entry" or compat.get("skills") != "./skills/":
+        if manifest.get("name") != "df-agent" or compat.get("skills") != "./skills/":
             errors.append("Unexpected plugin identity or skill root")
         actual = {p.name for p in (root / PLUGIN / "skills").iterdir() if p.is_dir()}
-        if actual != {"team-advisor"}:
+        if actual != {"df-agent"}:
             errors.append(f"Entry release unexpectedly bundles professional skills: {sorted(actual)}")
         skill = (root / SKILL / "SKILL.md").read_text("utf-8")
         front = re.match(r"\A---\r?\n(.*?)\r?\n---\r?\n", skill, re.S)
-        if not front or not re.search(r"(?m)^name:\s*[\"']?team-advisor[\"']?\s*$", front.group(1)):
-            errors.append("Invalid team-advisor frontmatter")
+        if not front or not re.search(r"(?m)^name:\s*[\"']?df-agent[\"']?\s*$", front.group(1)):
+            errors.append("Invalid df-agent frontmatter")
         if not front or not re.search(r"(?m)^description:\s*\S", front.group(1)):
             errors.append("Missing skill description")
         for required in ("agents/openai.yaml", "scripts/doctor.py", "scripts/setup.py", "scripts/setup.ps1",
@@ -121,7 +121,7 @@ def check(root: Path = ROOT) -> tuple[list[Path], list[str], dict]:
             errors.append("Marketplace must contain only this entry plugin")
         else:
             source = entries[0].get("source", {})
-            if source.get("source") != "local" or source.get("path") != "./plugins/team-advisor-entry":
+            if source.get("source") != "local" or source.get("path") != "./plugins/df-agent":
                 errors.append("Unexpected marketplace source")
             else:
                 destination = (root / source["path"]).resolve()

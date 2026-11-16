@@ -1,8 +1,10 @@
-# TeamAdvisor · 团队顾问 0.3.1
+# DF Agent 0.4.0
 
 在当前 Windows 桌面软件的本地会话中，选择并衔接已安装的 DataLab、df-mcp 和 ETF 评论草稿 v2。本插件提供顾问入口、本机配置、任务质量反馈及有来源的个人/项目记忆；专业技能继续使用每台电脑现有的安装。
 
-仓库已公开。[下载固定版 0.3.1](https://github.com/raymondhuang1994/TeamAdvisor/releases/tag/v0.3.1) · [安装说明](docs/LOCAL_INSTALL.md) · [试用与测试指南](docs/TRY_IT.md)
+公开项目：[GitHub 仓库](https://github.com/raymondhuang1994/DF-Agent) · [0.4.0 发布页](https://github.com/raymondhuang1994/DF-Agent/releases/tag/v0.4.0) · [安装说明](docs/LOCAL_INSTALL.md) · [试用与测试指南](docs/TRY_IT.md)
+
+原 TeamAdvisor 项目从 0.4.0 起统一命名为 **DF Agent**。新入口为 `$df-agent`，插件安装标识为 `df-agent@df-agent`；已有设置和记忆的兼容方式见 [改名与兼容说明](docs/RENAME_0.4.0.md)。
 
 ## 可以做什么
 
@@ -16,7 +18,7 @@
 
 ## 使用
 
-安装后在新会话调用 `$team-advisor`，直接描述任务：
+安装后在新会话调用 `$df-agent`，直接描述任务：
 
 - “帮我完成首次设置，记住本机可用的技能和运行环境。”
 - “按这份产品资料写三条中文社区评论，给我内部审阅。”
@@ -27,7 +29,7 @@
 
 已有输入足够就省略检索，不需要计算就省略 DataLab。缺少某项技能时说明缺项，继续可独立完成的步骤。首次设置与后续自检由顾问处理；本地配置变化会重新检查。
 
-## 0.3.1 新增能力
+## 主要能力
 
 | 能力 | 行为 |
 |---|---|
@@ -41,11 +43,11 @@
 
 ## 安装与开发
 
-完整仓库包含 `.agents/plugins/marketplace.json` 和 `plugins/team-advisor-entry/`。下载完整源码后，在当前客户端支持的 CLI 中运行：
+完整仓库包含 `.agents/plugins/marketplace.json` 和 `plugins/df-agent/`。下载完整源码后，在当前客户端支持的 CLI 中运行：
 
 ```powershell
 codex plugin marketplace add '<完整源码目录>' --json
-codex plugin add team-advisor-entry@team-advisor-pilot --json
+codex plugin add df-agent@df-agent --json
 ```
 
 具体安装、更新和新会话检查见 [安装说明](docs/LOCAL_INSTALL.md)。
@@ -55,13 +57,13 @@ codex plugin add team-advisor-entry@team-advisor-pilot --json
 ```powershell
 python -X utf8 -B -m unittest discover -s tests -v
 python -X utf8 -B tools/check_package.py
-python -X utf8 -B tools/check_package.py --zip '<项目外目录>\TeamAdvisor-Entry-Source-0.3.1.zip' --plugin-zip '<项目外目录>\TeamAdvisor-Entry-0.3.1.zip'
+python -X utf8 -B tools/check_package.py --zip '<项目外目录>\DF-Agent-Source-0.4.0.zip' --plugin-zip '<项目外目录>\DF-Agent-0.4.0.zip'
 ```
 
-固定版 0.3.1 的 [GitHub Windows CI](https://github.com/raymondhuang1994/TeamAdvisor/actions/runs/43805073364) 已通过回归与发布指纹检查；本机安装、新会话发现及合成任务结果见 [验证报告](docs/VALIDATION.md)。后续提交的状态以该提交自己的运行结果为准。
+0.4.0 已完成本地 85 项回归（84 通过、1 项因本机权限跳过）、安装、新会话原生发现及旧配置复用验证，详见 [本版验收](docs/VALIDATION_0.4.0.md)。远端 CI 以对应提交的 [实际运行结果](https://github.com/raymondhuang1994/DF-Agent/actions) 为准。此前合成业务结果保留在 [历史验证报告](docs/VALIDATION.md)，不把旧测试改写成新版业务验收。
 
 ## 文件与数据边界
 
-入口插件独立分发；专业技能代码、Python 环境、个人路径、反馈记录、记忆库、认证和公司资料均不进入发布包。本地状态默认在 `%LOCALAPPDATA%\TeamAdvisor`，也可指定其他独立目录。个人/项目范围由程序筛选，不是操作系统权限隔离；不要把自己的状态目录作为团队共享盘。
+入口插件独立分发；专业技能代码、Python 环境、个人路径、反馈记录、记忆库、认证和公司资料均不进入发布包。新安装默认状态在 `%LOCALAPPDATA%\DF-Agent`；没有新目录配置而旧 `%LOCALAPPDATA%\TeamAdvisor\setup.local.json` 存在时，继续使用原目录。显式指定的状态目录优先。改名不移动或复制记忆，详见 [改名与兼容说明](docs/RENAME_0.4.0.md)。个人/项目范围由程序筛选，不是操作系统权限隔离；不要把自己的状态目录作为团队共享盘。
 
 `sources.json` 固定本插件文件哈希与已观察的专业资源版本。`evals/` 的素材为合成数据，场景定义与实际执行证据分开保存。[设计说明](docs/MEMORY_DESIGN.md) 说明记忆方案及验证边界。

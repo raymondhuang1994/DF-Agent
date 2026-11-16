@@ -1,6 +1,0 @@
-{
-  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "name": "team-advisor-entry",
-  "version": "0.3.1",
-  "description": "团队顾问：衔接资料检索、数据分析与 ETF 评论草稿，保存本机配置并复用有来源的个人和项目记忆。"
-}

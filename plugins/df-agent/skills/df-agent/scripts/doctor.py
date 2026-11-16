@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounded, read-only Team Advisor inventory. Never runs a discovered skill."""
+"""Bounded, read-only DF Agent inventory. Never runs a discovered skill."""
 from __future__ import annotations
 
 import argparse

@@ -1,12 +1,12 @@
-# TeamAdvisor：同事试用与验收清单
+# DF Agent：同事试用与验收清单
 
-TeamAdvisor 是一个顾问入口：根据任务选择并衔接本机已有的 DataLab、df-mcp 和 ETF 评论草稿 v2，帮助完成资料转草稿、表格计算、结果核对，以及有来源的个人/项目记忆。它不自带这些专业技能，也不自动连接公司资料。缺少技能时应说清缺项，继续能独立完成的部分；普通回答完成不等于对应专业技能已经验收通过。
+DF Agent 是一个顾问入口：根据任务选择并衔接本机已有的 DataLab、df-mcp 和 ETF 评论草稿 v2，帮助完成资料转草稿、表格计算、结果核对，以及有来源的个人/项目记忆。它不自带这些专业技能，也不自动连接公司资料。缺少技能时应说清缺项，继续能独立完成的部分；普通回答完成不等于对应专业技能已经验收通过。
 
-下面是 **7 个建议测试**，不是本文件新增的执行记录。先做约 10 分钟的基础测试，再按需测试记忆。既有执行证据见 [验证报告](VALIDATION.md)：0.3.1 记录了 81 项回归（80 通过、1 跳过）及合成任务验证；同事电脑、公司连接和真实业务改善仍需各自验证。
+下面是 **7 个建议测试**，不是本文件新增的执行记录。先做约 10 分钟的基础测试，再按需测试记忆。既有执行证据见 [验证报告](VALIDATION.md)：改名前 TeamAdvisor 0.3.1 记录了 81 项回归（80 通过、1 跳过）及合成任务验证，这些不是 0.4.0 新执行记录；同事电脑、公司连接和真实业务改善仍需各自验证。
 
 ## 开始前
 
-- 按 [安装说明](LOCAL_INSTALL.md) 安装，开启新会话，调用 `$team-advisor`。入口可能显示为 `team-advisor-entry:team-advisor`。首次安装时间不计入 10 分钟。
+- 按 [安装说明](LOCAL_INSTALL.md) 安装，开启新会话，调用 `$df-agent`。入口可能显示为 `df-agent:df-agent`。首次安装时间不计入 10 分钟。
 - 下载完整仓库，并让会话能读取此仓库。下面提示词使用仓库根目录的相对路径；也可以选中对应文件加入会话。
 - 全部素材均为合成数据：[产品资料](../evals/fixtures/product.md)、[基金资金流](../evals/fixtures/fund_flows.csv)、[渠道收入](../evals/fixtures/channels.csv)，不可用于真实产品宣传。
 - 全程用测试身份 `synthetic-test`、项目 `test-project`。第 1 项会建立仓库外的全新本地测试目录；后文的 `<测试目录>` 替换为它返回的绝对路径。候选文件、反馈、记忆和输出均放在该目录，不写入发布仓库，不读取或删除已有个人记忆。
@@ -18,9 +18,9 @@ TeamAdvisor 是一个顾问入口：根据任务选择并衔接本机已有的 D
 复制提示词：
 
 ```text
-$team-advisor 帮我做一次隔离试用的首次设置。
+$df-agent 帮我做一次隔离试用的首次设置。
 本次身份为 synthetic-test，项目为 test-project。
-请在 %LOCALAPPDATA%\TeamAdvisor-TryIt 下新建带本次时间戳的独立目录；若已存在则另建，不覆盖。把本次配置、反馈、记忆、候选文件和输出都放在这个测试目录下，返回具体绝对路径供我后续使用。
+请在 %LOCALAPPDATA%\DF-Agent-TryIt 下新建带本次时间戳的独立目录；若已存在则另建，不覆盖。把本次配置、反馈、记忆、候选文件和输出都放在这个测试目录下，返回具体绝对路径供我后续使用。
 只检查当前会话可确认、允许读取的技能来源和运行环境。告诉我 DataLab、df-mcp、ETF 评论草稿 v2 分别是否可用、缺少什么，以及哪些只是检测到、尚未实际执行。
 本次只用仓库中的合成文件，不初始化或查询公司资料连接，不安装缺失技能，不读取已有个人状态。
 ```
@@ -32,7 +32,7 @@ $team-advisor 帮我做一次隔离试用的首次设置。
 复制提示词：
 
 ```text
-$team-advisor 使用 evals/fixtures/product.md，为“示例宽基 ETF A”写恰好三条简体中文社区评论，每条不超过 60 个汉字，供内部模拟审阅。
+$df-agent 使用 evals/fixtures/product.md，为“示例宽基 ETF A”写恰好三条简体中文社区评论，每条不超过 60 个汉字，供内部模拟审阅。
 仅用本文件提供的产品事实；风格参考只使用公开合成材料，不读取私库。请在三条草稿后单独列出事实依据和资料缺口，不对外发布。
 ```
 
@@ -51,7 +51,7 @@ $team-advisor 使用 evals/fixtures/product.md，为“示例宽基 ETF A”写�
 复制提示词：
 
 ```text
-$team-advisor 读取 evals/fixtures/fund_flows.csv，计算 2026 年 10 月各基金净流入。
+$df-agent 读取 evals/fixtures/fund_flows.csv，计算 2026 年 10 月各基金净流入。
 口径：净流入 = creation_amount - redemption_amount；赎回以正数输入；金额按 CNY 元展示。
 给出基金、申购、赎回、净流入及合计表，核对分项与总额，保留文件来源、期间、币种和版本。不需要图表。用两句话解释结果，同时说明这份数据不能证明什么。
 如果用了 DataLab，保留它返回的检查状态和结果状态；未实际运行时不要写成运行成功。所有输出写到本次测试目录。
@@ -85,7 +85,7 @@ $team-advisor 读取 evals/fixtures/fund_flows.csv，计算 2026 年 10 月各�
 在当前会话复制，填入第 1 项的目录：
 
 ```text
-$team-advisor 本次仅使用 <测试目录> 中的记忆目录，身份 synthetic-test，项目 test-project。
+$df-agent 本次仅使用 <测试目录> 中的记忆目录，身份 synthetic-test，项目 test-project。
 请将以下具体偏好保存为本测试项目的已发布记忆：资金流汇报默认以 CNY 千元展示，列顺序为“基金、净流入、申购、赎回”，保留两位小数；底表计算仍使用原始金额。key 使用 tryit.fund-flow.display，版本 ID 使用 tryit-flow-display-v1。
 我已确认并授权保存上述内容和这个项目范围。来源使用本条明确指令及实际时间、版本定位，不编造来源哈希。请先展示实际保存内容、范围和来源，再执行候选与发布流程，返回记忆目录、ID 和状态。不保存本次金额答案或整段聊天。
 ```
@@ -95,7 +95,7 @@ $team-advisor 本次仅使用 <测试目录> 中的记忆目录，身份 synthet
 **开启新会话**，复制以下内容。不要把偏好原文或上次答案带入新会话：
 
 ```text
-$team-advisor 继续隔离试用：身份 synthetic-test，项目 test-project，设置和记忆均使用 <测试目录> 中对应的本地目录。
+$df-agent 继续隔离试用：身份 synthetic-test，项目 test-project，设置和记忆均使用 <测试目录> 中对应的本地目录。
 请检索本项目与资金流展示相关的已发布记忆，并按适用偏好重新读取 evals/fixtures/fund_flows.csv，计算各基金申购、赎回和净流入。说明实际采用了哪条记忆及来源；金额必须从本次文件计算，不沿用历史答案。
 ```
 
@@ -106,7 +106,7 @@ $team-advisor 继续隔离试用：身份 synthetic-test，项目 test-project�
 复制提示词：
 
 ```text
-$team-advisor 仍使用 <测试目录>，身份 synthetic-test，项目 test-project。
+$df-agent 仍使用 <测试目录>，身份 synthetic-test，项目 test-project。
 新增一条候选：资金流汇报改为以 CNY 万元展示，其余展示约定不变。key 仍为 tryit.fund-flow.display，ID 为 tryit-flow-display-v2，明确 supersedes 为 tryit-flow-display-v1，来源为本条指令。
 这次只保存候选，不授权发布。请返回候选状态，然后按普通任务的记忆检索流程重新计算 evals/fixtures/fund_flows.csv；不要把刚才的候选文字作为本次计算指令。
 ```
@@ -118,7 +118,7 @@ $team-advisor 仍使用 <测试目录>，身份 synthetic-test，项目 test-pro
 复制提示词：
 
 ```text
-$team-advisor 仍使用 <测试目录>，身份 synthetic-test，项目 test-project。
+$df-agent 仍使用 <测试目录>，身份 synthetic-test，项目 test-project。
 重新读取 evals/fixtures/fund_flows.csv。这一次明确以 CNY 元显示，列顺序为“基金、申购、赎回、净流入”，不带小数。只给这次结果，不修改或新增任何记忆。
 ```
 
@@ -129,7 +129,7 @@ $team-advisor 仍使用 <测试目录>，身份 synthetic-test，项目 test-pro
 复制提示词：
 
 ```text
-$team-advisor 仅处理 <测试目录> 中的记忆，身份 synthetic-test，项目 test-project。
+$df-agent 仅处理 <测试目录> 中的记忆，身份 synthetic-test，项目 test-project。
 我授权删除本测试创建的 tryit-flow-display-v1 和 tryit-flow-display-v2 两个精确版本。先核对实际 ID、key、身份、项目和内容确属本测试，再按这两个 ID 删除；若不匹配则停止该删除并报告。
 不要删除整个目录、其他 ID、其他项目、原始文件或任何已有个人状态。删除后重新查询本项目的资金流展示记忆，并说明实际删除范围及仍保留的副本类型。
 ```

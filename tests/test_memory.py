@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "plugins/team-advisor-entry/skills/team-advisor/scripts/memory.py"
+SCRIPT = ROOT / "plugins/df-agent/skills/df-agent/scripts/memory.py"
 SPEC = importlib.util.spec_from_file_location("advisor_memory", SCRIPT)
 memory = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(memory)

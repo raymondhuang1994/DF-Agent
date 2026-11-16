@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / 'plugins/team-advisor-entry/skills/team-advisor/scripts'
+SCRIPTS = ROOT / 'plugins/df-agent/skills/df-agent/scripts'
 
 
 def main():

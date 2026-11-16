@@ -9,5 +9,5 @@ param(
     [string]$SessionId = 'unspecified'
 )
 $ErrorActionPreference = 'Stop'
-$EntryDoctor = Join-Path $PSScriptRoot '../plugins/team-advisor-entry/skills/team-advisor/scripts/doctor.ps1'
+$EntryDoctor = Join-Path $PSScriptRoot '../plugins/df-agent/skills/df-agent/scripts/doctor.ps1'
 & $EntryDoctor @PSBoundParameters

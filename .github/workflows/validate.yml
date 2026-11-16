@@ -1,4 +1,4 @@
-name: Validate plugin
+name: Validate DF Agent
 on:
   push:
   pull_request:

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "release": "team-advisor-entry/0.3.1",
+  "release": "df-agent/0.4.0",
   "created_on": "2026-11-16",
   "original_handoff": {
     "filename": "TeamAdvisor-Windows-Development-Handoff-2026-11-16.zip",
@@ -14,7 +14,8 @@
     "Persistent per-machine setup with source/runtime drift detection.",
     "Explicit scoped feedback and reviewed personal/project memory with expiry, supersession, rollback and deletion.",
     "Real local plugin installation, native discovery in a fresh CLI session, and held-out memory-guided synthetic task.",
-    "Pin LF endings across Git checkouts so Windows autocrlf cannot invalidate exact-byte fingerprints."
+    "Pin LF endings across Git checkouts so Windows autocrlf cannot invalidate exact-byte fingerprints.",
+    "Rename project, marketplace, plugin and skill to DF Agent / df-agent; preserve durable schemas and existing local state with legacy default fallback."
   ],
   "professional_sources": {
     "data-lab": {
@@ -81,25 +82,25 @@
     }
   },
   "entry_files_sha256": {
-    ".codex-plugin/plugin.json": "2082101ba8714447ea4299acf0395348be4fa1719a50ab14592bb05c6366594a",
-    "plugin.json": "e3262ad63c70e19b2d0cba229bce896b6b6ad0f44e0cde52017920b0e10af72a",
-    "skills/team-advisor/agents/openai.yaml": "e8a6e17e3c41773f7ba7a6205b9e937377b725e1e99767ad92f7f23c20d4acde",
-    "skills/team-advisor/references/catalog.md": "6b7e98a0363684cb5a433b8d35036f1ea2bf799c7dff751974934576c9ce8b31",
-    "skills/team-advisor/references/handoff.md": "d7220396c16224323b59d3dd49b04a4551856121e87979de57f032e9d680c82f",
-    "skills/team-advisor/references/memory.md": "df0298e9ef938656c86c997269ad258a4f71ce1c3f5f99e8a8b0709ea53948aa",
-    "skills/team-advisor/references/public-examples/cases.jsonl": "2e6f0ae30b97165a966fff63cd69d77efe3924d757db9fbb2e7c8c2c710f1213",
-    "skills/team-advisor/references/public-examples/profile.json": "35a6a9e231455529ee28bef5f39753b6a46306ae87f4921cbc18b8d9eec0a11d",
-    "skills/team-advisor/references/quality.md": "8f68908d84d8d9f47d59578db58f191841c864effa665c9870e54cfd961edba4",
-    "skills/team-advisor/references/runtime.md": "6c459b48ce675f68cb03212638f55cf5d56a67ade5962878d234a2c742558302",
-    "skills/team-advisor/references/setup.md": "0497faa603164734c9ca59e84317c23a62ad0bb3356e36baebfca257d34ef623",
-    "skills/team-advisor/references/sources-and-capabilities.md": "d7ee34e02a34dea4bb389acb9c7e51f078a6dfdef084e36ecf9126775875b77b",
-    "skills/team-advisor/scripts/doctor.ps1": "b80cc57a65dd12a411b5aec50ebca8a48a49f6f602acbcf9502398ef1b9afad9",
-    "skills/team-advisor/scripts/doctor.py": "29cb5040c2068f554a53eb41fb9f222e6d29c986942828c34a77d4b0302babb1",
-    "skills/team-advisor/scripts/feedback.py": "85faf06d1902a9d1e0cb36af20aa3d604a3d3d8e2e27874409658d1cee4643fe",
-    "skills/team-advisor/scripts/memory.py": "9f3757c8750a5eba718d761de1138bfd4f657f30b6914419ffe0f9926a346365",
-    "skills/team-advisor/scripts/setup.ps1": "b79feae1ec7b88969c06b00e6a3b1eeb9a27457a8672c3411ef5de3d48ea2097",
-    "skills/team-advisor/scripts/setup.py": "29f1406ed94827513b993273abf3c4fecf1f04c0db23d582456c395e06568072",
-    "skills/team-advisor/SKILL.md": "56d421a6c1aa1801fb5fe973944f6a750c7b7591a902f80235fd40d4fa4d02ab"
+    ".codex-plugin/plugin.json": "19ce6bbfa303967205a45d1d4ef757668c037e4beb4e229d22f536295c048c52",
+    "plugin.json": "64e56cf9d60a405e113e50dc809db11fda9102b1499e7db6e9f5e9a633e4e17e",
+    "skills/df-agent/agents/openai.yaml": "754bb4c7aa09bd9695b73ab7dd86e9d41e6fcdf63e7c196839463bf4488887a6",
+    "skills/df-agent/references/catalog.md": "6b7e98a0363684cb5a433b8d35036f1ea2bf799c7dff751974934576c9ce8b31",
+    "skills/df-agent/references/handoff.md": "d7220396c16224323b59d3dd49b04a4551856121e87979de57f032e9d680c82f",
+    "skills/df-agent/references/memory.md": "df0298e9ef938656c86c997269ad258a4f71ce1c3f5f99e8a8b0709ea53948aa",
+    "skills/df-agent/references/public-examples/cases.jsonl": "2e6f0ae30b97165a966fff63cd69d77efe3924d757db9fbb2e7c8c2c710f1213",
+    "skills/df-agent/references/public-examples/profile.json": "35a6a9e231455529ee28bef5f39753b6a46306ae87f4921cbc18b8d9eec0a11d",
+    "skills/df-agent/references/quality.md": "8f68908d84d8d9f47d59578db58f191841c864effa665c9870e54cfd961edba4",
+    "skills/df-agent/references/runtime.md": "6c459b48ce675f68cb03212638f55cf5d56a67ade5962878d234a2c742558302",
+    "skills/df-agent/references/setup.md": "459e61532611ef33bbae310c08ba5d07438dff392f2cc87311246f7d943d1a00",
+    "skills/df-agent/references/sources-and-capabilities.md": "d0bc981aac50de97e98c82e3a74e8e0ebabe611c9852ac0d6e90682d1e31c6ff",
+    "skills/df-agent/scripts/doctor.ps1": "b80cc57a65dd12a411b5aec50ebca8a48a49f6f602acbcf9502398ef1b9afad9",
+    "skills/df-agent/scripts/doctor.py": "79746cbe6baa3f84ba10878ddffbce5b5670520ae8ef09fe81e13e3174a668b9",
+    "skills/df-agent/scripts/feedback.py": "85faf06d1902a9d1e0cb36af20aa3d604a3d3d8e2e27874409658d1cee4643fe",
+    "skills/df-agent/scripts/memory.py": "9f3757c8750a5eba718d761de1138bfd4f657f30b6914419ffe0f9926a346365",
+    "skills/df-agent/scripts/setup.ps1": "d09f80feedceb3e36e4a7e9cc5e5e2f023dd86db9c69a5a6dfd607015b6ff748",
+    "skills/df-agent/scripts/setup.py": "eae8e3901bb379c026884740f525570474035dc0b3e05bf4ea344dfe7d64c49c",
+    "skills/df-agent/SKILL.md": "61e68136d45b1544889147e7ed7fdb5b40fb81158f616bc2630c44e48612c3fc"
   },
   "notes": [
     "Professional skill code and proprietary data are not redistributed in this release.",
