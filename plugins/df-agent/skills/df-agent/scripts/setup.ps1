@@ -7,7 +7,11 @@ param(
     [string]$OutputPath,
     [string]$PlanPath,
     [string]$BindingsPath,
-    [string]$SessionId = 'unspecified'
+    [string]$SessionId = 'unspecified',
+    [string]$TaskId,
+    [string[]]$WriteRoot,
+    [ValidateSet('setup', 'memory', 'feedback', 'output', 'runtime')][string[]]$AllowOperation,
+    [string[]]$DocumentRoot
 )
 $ErrorActionPreference = 'Stop'
 function Assert-NoReparsePoint([string]$LiteralPath) {
@@ -56,11 +60,17 @@ if (-not $PythonPath -or $PythonPath -match '[\\/]WindowsApps[\\/]' -or -not (Te
     throw 'Supply -PythonPath with a real Python 3.11+ interpreter. Nothing was installed.'
 }
 Assert-NoReparsePoint $PythonPath
-$SetupArguments = @('-X', 'utf8', '-B', $SetupScript, $Action.ToLowerInvariant(), '--state-dir', $StateDir)
+$SetupArguments = @('-X', 'utf8', '-B', $SetupScript)
+if ($TaskId) { $SetupArguments += @('--task-id', $TaskId) }
+foreach ($PathValue in $WriteRoot) { $SetupArguments += @('--write-root', $PathValue) }
+foreach ($OperationValue in $AllowOperation) { $SetupArguments += @('--allow-operation', $OperationValue) }
+foreach ($PathValue in $DocumentRoot) { $SetupArguments += @('--document-root', $PathValue) }
+$SetupArguments += @($Action.ToLowerInvariant(), '--state-dir', $StateDir)
 switch ($Action) {
     'Plan' {
-        if (-not $Roots -or -not $OutputPath) { throw 'Plan requires -Roots and -OutputPath.' }
-        $SetupArguments += @('--roots') + $Roots + @('--python', $PythonPath, '--output', $OutputPath, '--session-id', $SessionId)
+        if (-not $Roots) { throw 'Plan requires -Roots.' }
+        $SetupArguments += @('--roots') + $Roots + @('--python', $PythonPath, '--session-id', $SessionId)
+        if ($OutputPath) { $SetupArguments += @('--output', $OutputPath) }
         if ($BindingsPath) { $SetupArguments += @('--bindings', $BindingsPath) }
     }
     'Apply' {

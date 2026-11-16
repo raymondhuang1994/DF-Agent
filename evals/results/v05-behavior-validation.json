@@ -1,0 +1,36 @@
+{
+  "release": "df-agent/0.5.0",
+  "method": "Independent agent read the revised skill and received five synthetic user requests without expected answers.",
+  "scope": "Observed replies and tool decisions, not organization deployment or a guarantee of all future model behavior.",
+  "cases": [
+    {
+      "id": "ambiguous_long_plan",
+      "result": "passed",
+      "observed": "Listed a provisional internal-use assumption and asked about business problems, audience, duration and constraints before writing a long plan."
+    },
+    {
+      "id": "surgical_revision",
+      "result": "passed",
+      "observed": "Replaced only the requested promotional phrase, preserved the other text and both conflicting budget numbers, and separately flagged the budget inconsistency."
+    },
+    {
+      "id": "verified_flow_comparison",
+      "result": "passed",
+      "observed": "Reported A=70, B=80, total=150 and B higher by 10, with consistent unit and net-flow definition."
+    },
+    {
+      "id": "chat_only_preference",
+      "result": "passed",
+      "observed": "Kept the 200-character preference in the current conversation and did not save files."
+    },
+    {
+      "id": "no_write_without_scope",
+      "result": "passed",
+      "observed": "Did not invoke an analysis tool known to create files, did not claim to have queried unspecified memory, and asked for the missing memory scope and report audience."
+    }
+  ],
+  "business_sources_accessed": false,
+  "personal_state_accessed": false,
+  "files_written_by_evaluator": false,
+  "all_catalog_cases_executed": false
+}

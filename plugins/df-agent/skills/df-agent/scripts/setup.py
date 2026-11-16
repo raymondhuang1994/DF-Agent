@@ -2,6 +2,9 @@
 """Persist explicitly selected local DF Agent roots and runtime; no installation."""
 from __future__ import annotations
 
+import sys
+sys.dont_write_bytecode = True
+
 import argparse
 from contextlib import contextmanager
 import copy
@@ -9,12 +12,12 @@ import importlib.util
 import json
 import os
 from pathlib import Path
-import sys
 import tempfile
 
 _SPEC = importlib.util.spec_from_file_location("team_advisor_setup_doctor", Path(__file__).with_name("doctor.py"))
 doctor = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(doctor)
+access = doctor.access
 
 CONFIG_SCHEMA = "team-advisor-setup/1"
 PLAN_SCHEMA = "team-advisor-setup-plan/1"
@@ -138,7 +141,8 @@ def make_plan(state_dir, roots, python, bindings=None, session_id="setup-plan"):
 
 
 @contextmanager
-def locked(state):
+def locked(state, *, write_access=None):
+    access.require_write(write_access, state, "setup")
     state.mkdir(parents=True, exist_ok=True)
     doctor.no_links(state)
     lock = state / ".setup.lock"
@@ -154,8 +158,9 @@ def locked(state):
         lock.unlink()
 
 
-def atomic_save(path, value):
+def atomic_save(path, value, *, write_access=None):
     path = doctor.no_links(path)
+    access.require_write(write_access, path, "setup")
     temporary = None
     try:
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", newline="\n", prefix=".setup-", suffix=".tmp", dir=path.parent, delete=False) as handle:
@@ -171,7 +176,7 @@ def atomic_save(path, value):
             temporary.unlink()
 
 
-def apply_plan(state_dir, plan):
+def apply_plan(state_dir, plan, *, write_access=None):
     state = external(state_dir)
     required = {"schema_version", "created_at", "state_dir", "previous_config_digest", "config", "capabilities", "effects", "network_calls", "professional_scripts_executed", "plan_digest"}
     if not isinstance(plan, dict) or set(plan) != required or plan["schema_version"] != PLAN_SCHEMA:
@@ -189,12 +194,13 @@ def apply_plan(state_dir, plan):
     doctor.validate(report)
     if fingerprint(report) != config["baseline"]:
         raise doctor.CheckError("Source, coverage or runtime changed after planning; create and review a fresh plan.")
-    with locked(state):
+    access.require_write(write_access, state, "setup")
+    with locked(state, write_access=write_access):
         previous = read_config(state)
         expected_revision = previous["revision"] + 1 if previous else 1
         if current_digest(previous) != plan["previous_config_digest"] or config["revision"] != expected_revision:
             raise doctor.CheckError("Saved configuration changed after planning; create a fresh plan.")
-        atomic_save(state / CONFIG_NAME, config)
+        atomic_save(state / CONFIG_NAME, config, write_access=write_access)
     return {"status": "configured", "revision": config["revision"], "state_dir": str(state),
             "bindings": config["bindings"], "host_discovery": "not_checked", "business_connections": "not_checked",
             "network_calls": False, "professional_scripts_executed": False}
@@ -218,10 +224,11 @@ def status(state_dir, session_id="unspecified"):
             "network_calls": False, "professional_scripts_executed": False}
 
 
-def write_private_output(path, value, state, roots):
+def write_private_output(path, value, state, roots, *, write_access=None):
     path = external(path, roots)
     if path == doctor.absolute(state) / CONFIG_NAME or doctor.under(path, state):
         raise doctor.CheckError("Plan/report output must be outside managed setup state.")
+    access.require_write(write_access, path, "output")
     path.parent.mkdir(parents=True, exist_ok=True)
     doctor.no_links(path)
     try:
@@ -234,6 +241,7 @@ def write_private_output(path, value, state, roots):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    access.add_write_arguments(parser)
     subparsers = parser.add_subparsers(dest="command", required=True)
     planning = subparsers.add_parser("plan", help="Read approved public roots and prepare a reviewable local setup plan")
     planning.add_argument("--state-dir", required=True)
@@ -241,7 +249,7 @@ def main(argv=None):
     planning.add_argument("--python", required=True)
     planning.add_argument("--bindings")
     planning.add_argument("--session-id", default="setup-plan")
-    planning.add_argument("--output", required=True)
+    planning.add_argument("--output", help="New file in an explicitly authorized output directory; omit for stdout")
     applying = subparsers.add_parser("apply", help="Apply a reviewed unchanged plan")
     applying.add_argument("--state-dir", required=True)
     applying.add_argument("--plan", required=True)
@@ -251,21 +259,23 @@ def main(argv=None):
     checking.add_argument("--output")
     args = parser.parse_args(argv)
     try:
+        write_access = access.from_args(args)
         if args.command == "plan":
             result = make_plan(args.state_dir, args.roots, args.python, doctor.read_json(args.bindings) if args.bindings else None, args.session_id)
-            write_private_output(args.output, result, args.state_dir, args.roots)
-            result = {"status": "planned", "plan": str(doctor.absolute(args.output)), "revision": result["config"]["revision"],
-                      "selected_sources": result["config"]["bindings"], "state_written": False,
-                      "capabilities": result["capabilities"]}
+            if args.output:
+                write_private_output(args.output, result, args.state_dir, args.roots, write_access=write_access)
+                result = {"status": "planned", "plan": str(doctor.absolute(args.output)), "revision": result["config"]["revision"],
+                          "selected_sources": result["config"]["bindings"], "state_written": False,
+                          "capabilities": result["capabilities"]}
         elif args.command == "apply":
-            result = apply_plan(args.state_dir, doctor.read_json(args.plan))
+            result = apply_plan(args.state_dir, doctor.read_json(args.plan), write_access=write_access)
         else:
             result = status(args.state_dir, args.session_id)
             if args.output:
-                write_private_output(args.output, result, args.state_dir, result.get("roots", []))
+                write_private_output(args.output, result, args.state_dir, result.get("roots", []), write_access=write_access)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
-    except (OSError, doctor.CheckError, TypeError, KeyError, ValueError) as error:
+    except (OSError, doctor.CheckError, access.AccessError, TypeError, KeyError, ValueError) as error:
         print(json.dumps({"status": "failed", "error": str(error)}, ensure_ascii=False), file=sys.stderr)
         return 1
 

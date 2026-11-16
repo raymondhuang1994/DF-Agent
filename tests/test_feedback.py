@@ -36,12 +36,65 @@ class FeedbackTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix="advisor-feedback-")
         self.base = Path(self.tmp.name)
-        self.store = feedback.Store(self.base / "state")
+        self.write_access = feedback.access.WriteAccess("synthetic-feedback-test", [self.base], ["feedback", "output", "memory"])
+        self.store = feedback.Store(self.base / "state", write_access=self.write_access)
         self.scope = feedback.scope_value("project", "synthetic-person", "synthetic-project")
         self.store.init()
 
     def tearDown(self):
         self.tmp.cleanup()
+
+    def test_default_denies_writes_and_reads_do_not_create_files(self):
+        self.store.record(sample(), explicit=True)
+        readonly = feedback.Store(self.store.path)
+        before = {p.name: (p.read_bytes(), p.stat().st_mtime_ns) for p in self.store.path.iterdir()}
+        self.assertEqual(len(readonly.records(self.scope)), 1)
+        self.assertEqual(readonly.summary(self.scope)["feedback_count"], 1)
+        self.assertEqual(readonly.load()["revision"], 1)
+        mutations = [readonly.init, lambda: readonly.record(sample("new"), explicit=True),
+                     lambda: readonly.delete("feedback-001", self.scope, confirmed=True),
+                     lambda: readonly.suggest("feedback-001", self.scope, "definition", self.base / "candidate.json"),
+                     lambda: readonly.save(readonly.load())]
+        for mutation in mutations:
+            with self.assertRaises(feedback.access.AccessError):
+                mutation()
+        self.assertEqual({p.name: (p.read_bytes(), p.stat().st_mtime_ns) for p in self.store.path.iterdir()}, before)
+        self.assertFalse((self.base / "candidate.json").exists())
+        missing = feedback.Store(self.base / "missing")
+        with self.assertRaises(feedback.access.AccessError):
+            missing.init()
+        with self.assertRaises(feedback.FeedbackError):
+            missing.load()
+        self.assertFalse(missing.path.exists())
+
+    def test_candidate_export_requires_both_store_and_output_grants(self):
+        self.store.record(sample(), explicit=True)
+        before = self.store.file.read_bytes()
+        denied_output = self.base / "outside-grant" / "candidate.json"
+        store_only = feedback.access.WriteAccess("synthetic-feedback-test", [self.store.path], ["feedback", "output"])
+        limited = feedback.Store(self.store.path, write_access=store_only)
+        with self.assertRaises(feedback.access.AccessError):
+            limited.suggest("feedback-001", self.scope, "definition", denied_output)
+        self.assertEqual(self.store.file.read_bytes(), before)
+        self.assertFalse(denied_output.parent.exists())
+        output_only = feedback.access.WriteAccess("synthetic-feedback-test", [self.base], ["output"])
+        limited = feedback.Store(self.store.path, write_access=output_only)
+        with self.assertRaises(feedback.access.AccessError):
+            limited.suggest("feedback-001", self.scope, "definition", self.base / "candidate.json")
+        self.assertEqual(self.store.file.read_bytes(), before)
+        self.assertFalse((self.base / "candidate.json").exists())
+        self.assertFalse(self.store.lock.exists())
+
+    def test_documents_cannot_be_used_for_feedback_or_candidate_output(self):
+        documents = self.base / "documents"
+        documents.mkdir()
+        original = documents / "original.txt"
+        original.write_text("synthetic source", encoding="utf-8")
+        with self.assertRaises(feedback.access.AccessError):
+            grant = feedback.access.WriteAccess("synthetic-feedback-test", [documents], ["feedback", "output"], document_roots=[documents])
+            feedback.Store(documents / "feedback", write_access=grant).init()
+        self.assertEqual([p.name for p in documents.iterdir()], ["original.txt"])
+        self.assertEqual(original.read_text("utf-8"), "synthetic source")
 
     def test_silence_or_machine_check_is_not_user_acceptance(self):
         with self.assertRaises(feedback.FeedbackError):
@@ -194,7 +247,7 @@ class FeedbackTests(unittest.TestCase):
         self.store.record(sample(), explicit=True)
         output = self.base / "candidate.json"
         self.store.suggest("feedback-001", self.scope, "flow-definition", output)
-        memory_store = memory.MemoryStore(self.base / "memory")
+        memory_store = memory.MemoryStore(self.base / "memory", write_access=self.write_access)
         memory_store.init()
         candidate = json.loads(output.read_text("utf-8"))
         memory_store.candidate(candidate)
@@ -219,7 +272,7 @@ class FeedbackTests(unittest.TestCase):
         output = self.base / "candidate.json"
         self.store.suggest("feedback-001", supplied_scope, "flow-definition", output)
         candidate = json.loads(output.read_text("utf-8"))
-        memory_store = memory.MemoryStore(self.base / "memory")
+        memory_store = memory.MemoryStore(self.base / "memory", write_access=self.write_access)
         memory_store.init()
         memory_store.candidate(candidate)
         memory_store.publish(candidate["id"], "synthetic-person", "reviewer", "Explicit synthetic review", approve=True, project="synthetic-project")

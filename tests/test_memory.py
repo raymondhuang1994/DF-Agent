@@ -2,10 +2,13 @@
 from copy import deepcopy
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import textwrap
+import time
 import unittest
 from unittest.mock import patch
 
@@ -32,7 +35,8 @@ class MemoryTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="advisor-memory-")
         self.base = Path(self.temp.name)
-        self.store = memory.MemoryStore(self.base / "state")
+        self.write_access = memory.access.WriteAccess("synthetic-memory-test", [self.base], ["memory"])
+        self.store = memory.MemoryStore(self.base / "state", write_access=self.write_access)
         self.store.init()
 
     def tearDown(self):
@@ -45,6 +49,154 @@ class MemoryTests(unittest.TestCase):
 
     def ids(self, **kwargs):
         return [record["id"] for record in self.store.retrieve("synthetic-user-a", **kwargs)["records"]]
+
+    def write_flags(self):
+        return ["--task-id", "synthetic-memory-test", "--write-root", str(self.base), "--allow-operation", "memory"]
+
+    def test_default_denies_all_mutations_without_creating_files(self):
+        self.store.candidate(candidate("pending"))
+        readonly = memory.MemoryStore(self.store.directory)
+        before = {p.name: p.read_bytes() for p in self.store.directory.iterdir()}
+        mutations = [readonly.init, lambda: readonly.candidate(candidate("new")),
+                     lambda: readonly.publish("pending", "synthetic-user-a", "reviewer", "reviewed", True),
+                     lambda: readonly.delete("pending", "synthetic-user-a", "forget", True),
+                     lambda: readonly.rollback(0, "personal", "synthetic-user-a", "reviewer", "revert", True)]
+        for mutation in mutations:
+            with self.assertRaises(memory.access.AccessError):
+                mutation()
+        self.assertEqual({p.name: p.read_bytes() for p in self.store.directory.iterdir()}, before)
+        missing = self.base / "missing"
+        with self.assertRaises(memory.access.AccessError):
+            memory.MemoryStore(missing).init()
+        self.assertFalse(missing.exists())
+
+    def test_readonly_queries_leave_missing_lock_and_snapshot_unchanged(self):
+        self.publish(candidate())
+        (self.store.directory / "memory.lock").unlink()
+        readonly = memory.MemoryStore(self.store.directory)
+        before = self.store.path.read_bytes(), self.store.path.stat().st_mtime_ns
+        self.assertEqual(readonly.status()["revision"], 2)
+        self.assertEqual(readonly.retrieve("synthetic-user-a")["records"][0]["id"], "memory-1")
+        self.assertEqual(readonly.history("personal", "synthetic-user-a")["revision"], 2)
+        self.assertEqual((self.store.path.read_bytes(), self.store.path.stat().st_mtime_ns), before)
+        self.assertEqual([p.name for p in self.store.directory.iterdir()], ["memory.json"])
+        missing = memory.MemoryStore(self.base / "missing")
+        for query in (missing.status, lambda: missing.retrieve("synthetic-user-a"),
+                      lambda: missing.history("personal", "synthetic-user-a")):
+            with self.assertRaises(memory.MemoryError):
+                query()
+        self.assertFalse(missing.directory.exists())
+
+    def test_cli_without_bytecode_flag_is_readonly_and_default_write_is_denied(self):
+        # A fresh installed copy has no preexisting __pycache__ to mask writes.
+        scripts = self.base / "plugin" / "skills" / "df-agent" / "scripts"
+        scripts.mkdir(parents=True)
+        for source in (SCRIPT, SCRIPT.with_name("access.py")):
+            (scripts / source.name).write_bytes(source.read_bytes())
+        command = [sys.executable, "-X", "utf8", str(scripts / "memory.py"), "--store", str(self.store.directory)]
+        queried = subprocess.run(command + ["status"], capture_output=True, text=True, encoding="utf-8", timeout=5)
+        self.assertEqual(queried.returncode, 0, queried.stdout + queried.stderr)
+        self.assertEqual(json.loads(queried.stdout)["revision"], 0)
+        missing = self.base / "cli-missing"
+        denied = subprocess.run([sys.executable, str(scripts / "memory.py"), "--store", str(missing), "init"],
+                                capture_output=True, text=True, encoding="utf-8", timeout=5)
+        self.assertEqual(denied.returncode, 1, denied.stdout + denied.stderr)
+        self.assertIn("Read-only", json.loads(denied.stdout)["error"])
+        self.assertFalse(missing.exists())
+        self.assertEqual(sorted(p.name for p in scripts.iterdir()), ["access.py", "memory.py"])
+
+    def test_store_outside_grant_or_in_documents_cannot_be_initialized(self):
+        allowed = self.base / "allowed"
+        outside = self.base / "outside"
+        grant = memory.access.WriteAccess("synthetic-memory-test", [allowed], ["memory"])
+        with self.assertRaises(memory.access.AccessError):
+            memory.MemoryStore(outside, write_access=grant).init()
+        self.assertFalse(outside.exists())
+        documents = self.base / "documents"
+        documents.mkdir()
+        original = documents / "original.txt"
+        original.write_text("synthetic source stays unchanged", encoding="utf-8")
+        before = original.read_bytes()
+        with self.assertRaises(memory.access.AccessError):
+            grant = memory.access.WriteAccess("synthetic-memory-test", [documents], ["memory"], document_roots=[documents])
+            memory.MemoryStore(documents / "memory", write_access=grant).init()
+        self.assertEqual(original.read_bytes(), before)
+        self.assertEqual([p.name for p in documents.iterdir()], ["original.txt"])
+
+    def test_hardlinked_lock_cannot_write_into_readonly_source(self):
+        documents = self.base / "readonly-source"
+        documents.mkdir()
+        source = documents / "empty.txt"
+        source.write_bytes(b"")
+        lock_path = self.store.directory / "memory.lock"
+        lock_path.unlink()
+        os.link(source, lock_path)
+        grant = memory.access.WriteAccess("synthetic-memory-test", [self.store.directory], ["memory"],
+                                          document_roots=[documents])
+        store = memory.MemoryStore(self.store.directory, write_access=grant)
+        before = self.store.path.read_bytes()
+        with self.assertRaises(memory.access.AccessError):
+            store.candidate(candidate())
+        self.assertEqual(source.read_bytes(), b"")
+        self.assertEqual(lock_path.read_bytes(), b"")
+        self.assertEqual(self.store.path.read_bytes(), before)
+
+    @unittest.skipUnless(os.name == "nt", "Windows sharing regression")
+    def test_held_reader_keeps_complete_snapshot_while_process_writer_retries(self):
+        source = self.base / "concurrent-candidate.json"
+        source.write_text(json.dumps(candidate()), encoding="utf-8")
+        worker = textwrap.dedent('''
+            import importlib.util, json, sys
+            from pathlib import Path
+            spec = importlib.util.spec_from_file_location("reader_writer_test", sys.argv[1])
+            memory = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(memory)
+            replace = memory.os.replace
+            def observed_replace(source, destination):
+                try:
+                    return replace(source, destination)
+                except OSError as error:
+                    print(json.dumps({"blocked": getattr(error, "winerror", None)}), flush=True)
+                    raise
+            memory.os.replace = observed_replace
+            directory = Path(sys.argv[2])
+            grant = memory.access.WriteAccess("synthetic-concurrency", [directory], ["memory"])
+            store = memory.MemoryStore(directory, write_access=grant)
+            print(json.dumps(store.candidate(memory.read_json(Path(sys.argv[3])))), flush=True)
+        ''')
+        # The first real sharing failure signals us to finish reading and close
+        # the old handle; the separate writer process must then commit once.
+        with self.store.path.open("rb") as reader:
+            process = subprocess.Popen([sys.executable, "-X", "utf8", "-B", "-c", worker,
+                                        str(SCRIPT), str(self.store.directory), str(source)],
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8")
+            first = process.stdout.readline()
+            self.assertIn(json.loads(first)["blocked"], {5, 32, 33})
+            old = memory.validate_state(json.load(reader))
+            self.assertEqual(old["revision"], 0)
+            self.assertEqual(old["records"], {})
+            self.assertEqual(len(old["events"]), 1)
+        stdout, stderr = process.communicate(timeout=10)
+        self.assertEqual(process.returncode, 0, first + stdout + stderr)
+        self.assertEqual(json.loads(stdout.splitlines()[-1])["revision"], 1)
+        new = memory.validate_state(memory.read_json(self.store.path))
+        self.assertEqual(new["revision"], 1)
+        self.assertEqual(set(new["records"]), {"memory-1"})
+        self.assertEqual(len(new["events"]), 2)
+        self.assertEqual(sorted(p.name for p in self.store.directory.iterdir()), ["memory.json", "memory.lock"])
+
+    @unittest.skipUnless(os.name == "nt", "Windows sharing regression")
+    def test_reader_sharing_timeout_preserves_snapshot_and_cleans_temporary_file(self):
+        store = memory.MemoryStore(self.store.directory, lock_timeout=0.1, write_access=self.write_access)
+        before = self.store.path.read_bytes()
+        started = time.monotonic()
+        with self.store.path.open("rb") as reader:
+            with self.assertRaises(memory.MemoryError):
+                store.candidate(candidate())
+            self.assertEqual(reader.read(), before)
+        self.assertLess(time.monotonic() - started, 2.0)
+        self.assertEqual(self.store.path.read_bytes(), before)
+        self.assertEqual(sorted(p.name for p in self.store.directory.iterdir()), ["memory.json", "memory.lock"])
 
     def test_candidates_never_enter_ordinary_retrieval(self):
         self.store.candidate(candidate())
@@ -196,7 +348,7 @@ class MemoryTests(unittest.TestCase):
             source = self.base / f"candidate-{number}.json"
             source.write_text(json.dumps(candidate(f"process-{number}", key=f"definition-{number}")), encoding="utf-8")
             processes.append(subprocess.Popen([sys.executable, "-X", "utf8", "-B", str(SCRIPT), "--store", str(self.store.directory),
-                                               "candidate", "--input", str(source)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8"))
+                                               *self.write_flags(), "candidate", "--input", str(source)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8"))
         for process in processes:
             stdout, stderr = process.communicate(timeout=15)
             self.assertEqual(process.returncode, 0, stdout + stderr)
@@ -205,11 +357,18 @@ class MemoryTests(unittest.TestCase):
         self.assertEqual(status["counts"]["candidate"], 6)
 
     def test_lock_contention_is_bounded(self):
+        source = self.base / "locked-candidate.json"
+        source.write_text(json.dumps(candidate()), encoding="utf-8")
         with self.store._locked():
             process = subprocess.run([sys.executable, "-X", "utf8", "-B", str(SCRIPT), "--store", str(self.store.directory),
-                                      "--lock-timeout", "0.1", "status"], capture_output=True, text=True, encoding="utf-8", timeout=5)
+                                      *self.write_flags(), "--lock-timeout", "0.1", "candidate", "--input", str(source)],
+                                     capture_output=True, text=True, encoding="utf-8", timeout=5)
             self.assertEqual(process.returncode, 1)
             self.assertIn("busy", json.loads(process.stdout)["error"])
+            reader = subprocess.run([sys.executable, "-X", "utf8", "-B", str(SCRIPT), "--store", str(self.store.directory),
+                                     "status"], capture_output=True, text=True, encoding="utf-8", timeout=5)
+            self.assertEqual(reader.returncode, 0, reader.stdout + reader.stderr)
+            self.assertEqual(json.loads(reader.stdout)["revision"], 0)
         self.assertEqual(self.store.status()["revision"], 0)
 
     def test_rejects_storage_inside_plugin_or_repository(self):
@@ -222,7 +381,7 @@ class MemoryTests(unittest.TestCase):
     def test_cli_round_trip_unicode_and_explicit_review(self):
         source = self.base / "候选 [一].json"
         source.write_text(json.dumps(candidate(), ensure_ascii=False), encoding="utf-8")
-        command = [sys.executable, "-X", "utf8", "-B", str(SCRIPT), "--store", str(self.store.directory)]
+        command = [sys.executable, "-X", "utf8", "-B", str(SCRIPT), "--store", str(self.store.directory), *self.write_flags()]
         created = subprocess.run(command + ["candidate", "--input", str(source)], capture_output=True, text=True, encoding="utf-8")
         self.assertEqual(created.returncode, 0, created.stdout + created.stderr)
         published = subprocess.run(command + ["publish", "--id", "memory-1", "--owner", "synthetic-user-a", "--reviewer", "reviewer",

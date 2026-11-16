@@ -6,18 +6,30 @@ publishes memories. Scope labels filter retrieval; they are not OS access contro
 """
 from __future__ import annotations
 
+import sys
+
+# Read commands must not create imported-module caches in the plugin either.
+sys.dont_write_bytecode = True
+
 import argparse
 from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime, timezone
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
 import re
 import stat
-import sys
 import tempfile
+
+if "df_agent_write_access" not in sys.modules:
+    _ACCESS_SPEC = importlib.util.spec_from_file_location("df_agent_write_access", Path(__file__).with_name("access.py"))
+    _ACCESS_MODULE = importlib.util.module_from_spec(_ACCESS_SPEC)
+    sys.modules["df_agent_write_access"] = _ACCESS_MODULE
+    _ACCESS_SPEC.loader.exec_module(_ACCESS_MODULE)
+access = sys.modules["df_agent_write_access"]
 
 SCHEMA = 1
 ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,49}\Z")
@@ -168,7 +180,8 @@ def read_json(path):
         raise FeedbackError("Invalid UTF-8 JSON") from error
 
 
-def atomic_json(path, value):
+def atomic_json(path, value, *, write_access=None):
+    access.require_write(write_access, path, "feedback")
     external_path(path)
     fd, temporary = tempfile.mkstemp(prefix=".feedback-", suffix=".tmp", dir=path.parent)
     try:
@@ -184,13 +197,16 @@ def atomic_json(path, value):
 
 
 class Store:
-    def __init__(self, path):
+    def __init__(self, path, *, write_access=None):
         self.path = external_path(path)
         self.file = self.path / "feedback.json"
         self.lock = self.path / ".feedback.lock"
+        self.write_access = write_access
 
     @contextmanager
     def writing(self, initialize=False):
+        access.require_write(self.write_access, self.path, "feedback")
+        access.require_write(self.write_access, self.file, "feedback")
         external_path(self.path)
         if initialize:
             self.path.mkdir(parents=True, exist_ok=True)
@@ -238,12 +254,13 @@ class Store:
             if self.file.exists():
                 data = self.load()
                 return {"status": "already_initialized", "revision": data["revision"]}
-            atomic_json(self.file, {"schema_version": SCHEMA, "revision": 0, "records": {}, "deleted_ids": []})
+            atomic_json(self.file, {"schema_version": SCHEMA, "revision": 0, "records": {}, "deleted_ids": []}, write_access=self.write_access)
         return {"status": "initialized", "revision": 0}
 
     def save(self, data):
+        access.require_write(self.write_access, self.file, "feedback")
         data["revision"] += 1
-        atomic_json(self.file, data)
+        atomic_json(self.file, data, write_access=self.write_access)
 
     def record(self, value, explicit=False):
         if explicit is not True:
@@ -291,6 +308,9 @@ class Store:
         scope = validate_scope(scope)
         text_value(key, "memory key", 160)
         output = external_path(output)
+        # Both grants must pass before locking or updating linked-memory metadata.
+        access.require_write(self.write_access, self.path, "feedback")
+        access.require_write(self.write_access, output, "output")
         if output.exists():
             raise FeedbackError("Refusing to overwrite an existing candidate export")
         with self.writing():
@@ -316,6 +336,7 @@ class Store:
                 self.save(data)
             output.parent.mkdir(parents=True, exist_ok=True)
             external_path(output)
+            access.require_write(self.write_access, output, "output")
             with output.open("x", encoding="utf-8", newline="\n") as stream:
                 json.dump(candidate, stream, ensure_ascii=False, indent=2)
                 stream.write("\n")
@@ -341,6 +362,7 @@ class Store:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--store", type=Path, required=True)
+    access.add_write_arguments(parser)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("init")
     sub.add_parser("status")
@@ -363,7 +385,7 @@ def main():
             action.add_argument("--confirm", action="store_true")
     args = parser.parse_args()
     try:
-        store = Store(args.store)
+        store = Store(args.store, write_access=access.from_args(args))
         if args.command == "init":
             result = store.init()
         elif args.command == "status":
@@ -383,7 +405,7 @@ def main():
                 result = store.delete(args.id, scope, args.confirm)
         print(json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False))
         return 0
-    except (FeedbackError, OSError, TypeError) as error:
+    except (FeedbackError, access.AccessError, OSError, TypeError) as error:
         print(json.dumps({"status": "failed", "error": str(error)}, ensure_ascii=False))
         return 1
 

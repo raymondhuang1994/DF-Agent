@@ -8,7 +8,7 @@
 
 使用真实 Skill 目录解析所有相对资源。确认必需公共资源留在获准根目录内，不跟随链接扩大范围。记录版本；没有可靠版本时写未知，并用 SHA-256 固定此次 `SKILL.md` 与已使用的公共资源。不要遍历私库、环境密钥或业务资料来补指纹。
 
-本机根目录绑定、完整日志留在独立本地测试位置。共享报告使用 `ROOT_1/data-lab/SKILL.md` 一类别名，不写入用户名、业务正文或凭据。宿主、执行模式、权限、配置或来源指纹改变时，只重验受影响的能力。
+本机根目录绑定只在已确认的配置目录保存，运行日志放在已授权的本机运行目录；测试证据保存在获准输出位置。共享报告使用 `ROOT_1/data-lab/SKILL.md` 一类别名，不写入用户名、业务正文或凭据。宿主、执行模式、权限、配置或来源指纹改变时，只重验受影响的能力。
 
 ## 五层报告
 
@@ -31,11 +31,13 @@
 [入口检测器](../scripts/doctor.py) 位于本 Skill 的 `scripts/doctor.py`，不依赖源码项目外的包装脚本。它接收显式路径，不运行专业技能的业务脚本，不初始化 reader。PowerShell 示例中的变量均应先设为当前实际获准路径：
 
 ```powershell
-& $chosenPython -X utf8 -B $doctorPy scan --roots $approvedSkillRoots --output $newReportPath --python $chosenPython
+& $chosenPython -X utf8 -B $doctorPy scan --roots $approvedSkillRoots --python $chosenPython
 ```
+
+省略 `--output` 时，`scan` 和 `merge-evidence` 只返回 stdout。保存报告需先按 [文件访问](access.md) 确认输出目录，并在子命令前传 `--task-id $taskId --write-root $outputRoot --allow-operation output`，再指定全新 `--output` 路径。
 
 `scan` 可附 `--host-evidence` 或 `--bindings`。宿主证据必须来自当前会话实际观察，绑定必须是已确认的来源选择。使用 `validate` 检查报告，使用 `merge-evidence` 合并实际测试证据前先查看该版本 `--help` 及输入格式；合并只记录已经发生的测试，不执行测试。不能因文件扫描成功而伪造宿主发现。省略解释器或宿主证据时保留未测状态；输出报告不授予权限。
 
 检测器负责文件/解释器层事实；专业依赖、工具状态和真实结果在对应会话按任务补充。不要把结构检查器、手工构造报告或测试桩当成业务执行证据。
 
-插件清单与 marketplace 随版本 0.4.0 提供。文件存在、JSON 可解析和本地检查通过均不证明 GitHub 导入或成员安装成功。首次绑定与后续变化检查见 [首次设置](setup.md)。
+插件清单与 marketplace 随版本 0.5.0 提供。文件存在、JSON 可解析和本地检查通过均不证明 GitHub 导入或成员安装成功。首次绑定与后续变化检查见 [首次设置](setup.md)。

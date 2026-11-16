@@ -6,19 +6,31 @@ version has its own ID. Revision history contains ID sets, not duplicate payload
 """
 from __future__ import annotations
 
+import sys
+
+# Read commands must not create imported-module caches in the plugin either.
+sys.dont_write_bytecode = True
+
 import argparse
 from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime, timezone
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
 import re
 import stat
-import sys
 import time
 import uuid
+
+if "df_agent_write_access" not in sys.modules:
+    _ACCESS_SPEC = importlib.util.spec_from_file_location("df_agent_write_access", Path(__file__).with_name("access.py"))
+    _ACCESS_MODULE = importlib.util.module_from_spec(_ACCESS_SPEC)
+    sys.modules["df_agent_write_access"] = _ACCESS_MODULE
+    _ACCESS_SPEC.loader.exec_module(_ACCESS_MODULE)
+access = sys.modules["df_agent_write_access"]
 
 
 class MemoryError(ValueError):
@@ -149,10 +161,15 @@ def no_links(path: Path):
 
 
 def read_json(path: Path):
-    if path.stat().st_size > MAX_FILE_BYTES:
+    # Read one opened file, so an atomic replacement cannot mix revisions.
+    with path.open("rb") as handle:
+        if os.fstat(handle.fileno()).st_size > MAX_FILE_BYTES:
+            raise MemoryError("JSON file exceeds the 32 MiB store/input limit")
+        payload = handle.read(MAX_FILE_BYTES + 1)
+    if len(payload) > MAX_FILE_BYTES:
         raise MemoryError("JSON file exceeds the 32 MiB store/input limit")
     try:
-        return json.loads(path.read_text(encoding="utf-8-sig"))
+        return json.loads(payload.decode("utf-8-sig"))
     except (UnicodeError, json.JSONDecodeError) as exc:
         raise MemoryError("Invalid UTF-8 JSON") from exc
 
@@ -222,7 +239,7 @@ def validate_state(state):
 
 
 class MemoryStore:
-    def __init__(self, directory, lock_timeout=5.0):
+    def __init__(self, directory, lock_timeout=5.0, *, write_access=None):
         self.directory = Path(directory)
         if not self.directory.is_absolute():
             raise MemoryError("--store must be an explicit absolute directory outside the plugin/repository")
@@ -239,9 +256,12 @@ class MemoryStore:
             raise MemoryError("lock_timeout must be between 0 and 60 seconds")
         self.lock_timeout = lock_timeout
         self.path = self.directory / "memory.json"
+        self.write_access = write_access
 
     @contextmanager
     def _locked(self, create=False):
+        access.require_write(self.write_access, self.directory, "memory")
+        access.require_write(self.write_access, self.path, "memory")
         no_links(self.directory)
         if create:
             self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -250,12 +270,16 @@ class MemoryStore:
         no_links(self.directory)
         lock_path = self.directory / "memory.lock"
         no_links(lock_path)
+        access.require_write(self.write_access, lock_path, "memory")
         flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
         descriptor = os.open(lock_path, flags, 0o600)
         locked = False
         try:
             with os.fdopen(descriptor, "r+b", buffering=0) as handle:
-                if os.fstat(handle.fileno()).st_size == 0:
+                info = os.fstat(handle.fileno())
+                if info.st_nlink > 1:
+                    raise MemoryError("Memory lock must not share a hard link with another file")
+                if info.st_size == 0:
                     handle.write(b"0")
                 start = time.monotonic()
                 while True:
@@ -289,11 +313,14 @@ class MemoryStore:
             raise MemoryError("Unable to lock or access the memory store") from exc
 
     def _load(self):
+        no_links(self.directory)
+        no_links(self.path)
         if not self.path.is_file():
             raise MemoryError("Store is not initialized; run init first")
         return validate_state(read_json(self.path))
 
     def _write(self, state):
+        access.require_write(self.write_access, self.path, "memory")
         validate_state(state)
         payload = (json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
         if len(payload) > MAX_FILE_BYTES:
@@ -305,8 +332,20 @@ class MemoryStore:
                 handle.write(payload)
                 handle.flush()
                 os.fsync(handle.fileno())
-            no_links(self.path)
-            os.replace(temporary, self.path)
+            # Windows readers can briefly deny replacement while holding an
+            # ordinary read-only handle. Retry only the atomic replace, while
+            # retaining the writer lock and the already validated snapshot.
+            deadline = time.monotonic() + min(self.lock_timeout, 2.0)
+            while True:
+                access.require_write(self.write_access, self.path, "memory")
+                try:
+                    os.replace(temporary, self.path)
+                    break
+                except OSError as exc:
+                    remaining = deadline - time.monotonic()
+                    if os.name != "nt" or getattr(exc, "winerror", None) not in {5, 32, 33} or remaining <= 0:
+                        raise
+                    time.sleep(min(0.025, remaining))
         finally:
             if temporary.exists():
                 temporary.unlink()
@@ -397,31 +436,30 @@ class MemoryStore:
             raise MemoryError("Unknown status filter")
         tokens = [] if query is None else string(query, "query", 500).casefold().split()
         at = timestamp(now or utcnow())
-        with self._locked():
-            state = self._load()
-            found = []
-            for record in state["records"].values():
-                if record["owner"] != owner:
-                    continue
-                if record["scope"] == "project" and (project is None or record["project"] != project):
-                    continue
-                if scope is not None and record["scope"] != scope:
-                    continue
-                if status != "all" and record["status"] != status:
-                    continue
-                expired = bool(record.get("expires_at") and timestamp(record["expires_at"]) <= at)
-                if status == "published" and expired:
-                    continue
-                haystack = " ".join([record["key"], record["content"], *record["tags"]]).casefold()
-                score = sum(token in haystack for token in tokens)
-                if tokens and score == 0:
-                    continue
-                item = deepcopy(record)
-                item["expired"] = expired
-                found.append((score, item))
-            found.sort(key=lambda pair: (-pair[0], pair[1]["key"], pair[1]["id"]))
-            return {"status": "ok", "revision": state["revision"], "reference_only": True,
-                    "total_matches": len(found), "records": [item for _, item in found[:limit]]}
+        state = self._load()
+        found = []
+        for record in state["records"].values():
+            if record["owner"] != owner:
+                continue
+            if record["scope"] == "project" and (project is None or record["project"] != project):
+                continue
+            if scope is not None and record["scope"] != scope:
+                continue
+            if status != "all" and record["status"] != status:
+                continue
+            expired = bool(record.get("expires_at") and timestamp(record["expires_at"]) <= at)
+            if status == "published" and expired:
+                continue
+            haystack = " ".join([record["key"], record["content"], *record["tags"]]).casefold()
+            score = sum(token in haystack for token in tokens)
+            if tokens and score == 0:
+                continue
+            item = deepcopy(record)
+            item["expired"] = expired
+            found.append((score, item))
+        found.sort(key=lambda pair: (-pair[0], pair[1]["key"], pair[1]["id"]))
+        return {"status": "ok", "revision": state["revision"], "reference_only": True,
+                "total_matches": len(found), "records": [item for _, item in found[:limit]]}
 
     def rollback(self, revision, scope, owner, reviewer, reason, approve=False, project=None):
         reviewer, reason = self._review(reviewer, reason, approve)
@@ -464,38 +502,37 @@ class MemoryStore:
             return result
 
     def status(self):
-        with self._locked():
-            state = self._load()
-            return {"status": "ok", "schema_version": 1, "revision": state["revision"],
-                    "counts": {status: sum(item["status"] == status for item in state["records"].values()) for status in sorted(STATUSES)},
-                    "deleted_ids": len(state["tombstones"]), "reference_only": True}
+        state = self._load()
+        return {"status": "ok", "schema_version": 1, "revision": state["revision"],
+                "counts": {status: sum(item["status"] == status for item in state["records"].values()) for status in sorted(STATUSES)},
+                "deleted_ids": len(state["tombstones"]), "reference_only": True}
 
     def history(self, scope, owner, project=None):
         selected_context = context(scope, owner, project)
-        with self._locked():
-            state = self._load()
-            scoped_ids = {rid for rid, record in state["records"].items() if record_context(record) == selected_context}
-            events = []
-            previous = None
-            for event in state["events"]:
-                selected = sorted(scoped_ids.intersection(event["published_ids"]))
-                affected = sorted(scoped_ids.intersection(event["ids"]))
-                if event["revision"] != 0 and not affected and selected == previous:
-                    continue
-                item = {"revision": event["revision"], "action": event["action"], "at": event["at"],
-                        "ids": affected, "published_ids": selected}
-                if "target_revision" in event:
-                    item["target_revision"] = event["target_revision"]
-                events.append(item)
-                previous = selected
-            return {"status": "ok", "revision": state["revision"], "scope": scope, "events": events,
-                    "deleted_payloads_excluded": True}
+        state = self._load()
+        scoped_ids = {rid for rid, record in state["records"].items() if record_context(record) == selected_context}
+        events = []
+        previous = None
+        for event in state["events"]:
+            selected = sorted(scoped_ids.intersection(event["published_ids"]))
+            affected = sorted(scoped_ids.intersection(event["ids"]))
+            if event["revision"] != 0 and not affected and selected == previous:
+                continue
+            item = {"revision": event["revision"], "action": event["action"], "at": event["at"],
+                    "ids": affected, "published_ids": selected}
+            if "target_revision" in event:
+                item["target_revision"] = event["target_revision"]
+            events.append(item)
+            previous = selected
+        return {"status": "ok", "revision": state["revision"], "scope": scope, "events": events,
+                "deleted_payloads_excluded": True}
 
 
 def parser():
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument("--store", type=Path, required=True)
     cli.add_argument("--lock-timeout", type=float, default=5.0)
+    access.add_write_arguments(cli)
     commands = cli.add_subparsers(dest="command", required=True)
     commands.add_parser("init")
     commands.add_parser("status")
@@ -533,7 +570,7 @@ def parser():
 def main(argv=None):
     args = parser().parse_args(argv)
     try:
-        store = MemoryStore(args.store, args.lock_timeout)
+        store = MemoryStore(args.store, args.lock_timeout, write_access=access.from_args(args))
         if args.command in {"init", "status"}:
             result = getattr(store, args.command)()
         elif args.command == "candidate":
@@ -551,7 +588,7 @@ def main(argv=None):
             result = store.rollback(args.revision, args.scope, args.owner, args.reviewer, args.reason, args.approve, args.project)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
-    except (MemoryError, OSError) as exc:
+    except (MemoryError, access.AccessError, OSError) as exc:
         print(json.dumps({"status": "failed", "error": str(exc)}, ensure_ascii=False))
         return 1
 

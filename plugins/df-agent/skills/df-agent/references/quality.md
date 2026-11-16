@@ -16,21 +16,22 @@
 
 ## 什么值得记下来
 
-用户明确说“采用”、给出具体修改或拒绝并说明原因后，按已批准的个人/项目范围记录选定反馈。已有保存授权足够时直接记录；没有持久化范围时不默认收集对话。沉默、任务结束、助手自评或自动检查不能填作用户采用。记录简短的用户反馈、修改原因、产物与来源引用/哈希，不复制整段聊天或整份文件。
+用户明确说“采用”、给出具体修改或拒绝并说明原因后，按已批准的个人/项目范围记录选定反馈。保存需覆盖具体内容、反馈目录及 `feedback` 写入操作。已有保存授权足够时直接记录；没有持久化范围时不默认收集对话。沉默、任务结束、助手自评或自动检查不能填作用户采用。记录简短的用户反馈、修改原因、产物与来源引用/哈希，不复制整段聊天或整份文件。
 
 `accepted` 表示该次版本被明确采用；`revised` 表示用户要求修改，是否采用修改后的版本应另有反馈；`rejected` 表示明确拒绝。`criteria` 记录已观察到的检查，不虚构未执行的检查。`revision_minutes` 只有实际测量或用户提供时才填。反馈统计的分母是所选明确反馈，不能称作所有任务的采用率，也不能证明记忆造成质量提升。
 
 ## 本地反馈 CLI
 
-调用 `scripts/feedback.py`，Python 3.11+，无额外包。状态目录和候选导出均放在插件及发布仓库外；使用已绑定的解释器和本轮批准的状态目录。命令示意中的 `python` 替换为实际已验证的解释器。
+调用 `scripts/feedback.py`，Python 3.11+，无额外包。状态目录和候选导出均放在插件及发布仓库外；使用已绑定的解释器和本轮批准的状态目录。命令示意中的变量由助手解析为已确认路径，解释器须实际验证。写入授权按 [文件访问](access.md) 传入；以下读取不需要写入参数，保存不因“采用了”三个字自动获得目录权限。
 
 ```powershell
-python scripts/feedback.py --store '<反馈目录>' init
-python scripts/feedback.py --store '<反馈目录>' record --input '<选定反馈.json>' --explicit-feedback
-python scripts/feedback.py --store '<反馈目录>' summary --scope project --owner '<本人标识>' --project '<项目标识>'
-python scripts/feedback.py --store '<反馈目录>' list --scope personal --owner '<本人标识>'
-python scripts/feedback.py --store '<反馈目录>' suggest --scope project --owner '<本人标识>' --project '<项目标识>' --id 'feedback-001' --key 'flow-definition' --output '<全新候选.json>'
-python scripts/feedback.py --store '<反馈目录>' delete --scope project --owner '<本人标识>' --project '<项目标识>' --id 'feedback-001' --confirm
+$feedbackWrite = @('--task-id', $taskId, '--write-root', $feedbackStore, '--allow-operation', 'feedback')
+& $pythonExe -X utf8 -B $feedbackScript @feedbackWrite --store $feedbackStore init
+& $pythonExe -X utf8 -B $feedbackScript @feedbackWrite --store $feedbackStore record --input $selectedFeedback --explicit-feedback
+& $pythonExe -X utf8 -B $feedbackScript --store $feedbackStore summary --scope project --owner $owner --project $project
+& $pythonExe -X utf8 -B $feedbackScript --store $feedbackStore list --scope personal --owner $owner
+& $pythonExe -X utf8 -B $feedbackScript @feedbackWrite --write-root $candidateOutputRoot --allow-operation output --store $feedbackStore suggest --scope project --owner $owner --project $project --id 'feedback-001' --key 'flow-definition' --output $newCandidate
+& $pythonExe -X utf8 -B $feedbackScript @feedbackWrite --store $feedbackStore delete --scope project --owner $owner --project $project --id 'feedback-001' --confirm
 ```
 
 `--explicit-feedback` 声明已有明确的用户反馈，不是由程序证明授权。范围标签用于准确检索，并非登录认证或操作系统隔离。本人和项目标识的首尾空白会统一去除，与记忆模块保持相同范围；记录按实际时间先后排序，支持不同时区。`status` 只返回状态和版本，不返回其他人的记录。
@@ -60,9 +61,9 @@ python scripts/feedback.py --store '<反馈目录>' delete --scope project --own
 
 `workflow` 仅支持 `product_comments`、`fund_flows`。`scope` 为 `personal` 时不得填写 `project`，为 `project` 时必须填写。`id` 是 1–50 位 ASCII 字母、数字、点、下划线或连字符，首位为字母或数字。`source_refs` 可为空，但应在检查和交付中明确无来源的限制。`criteria` 是 `name/status/evidence` 数组；状态仅为 `passed/failed/not_checked`。
 
-可选的 `selected_excerpt` 保存用户明确采用的短例，`correction` 保存明确修改；两者限 4,000 字符，不用于保存全文。`suggest` 只从明确修改，或 `accepted` 记录中的选定短例生成候选。它输出兼容 [记忆流程](memory.md) 的 JSON，带来源、原反馈哈希和 `feedback_ids`，不导入、不发布、不扩大范围。事实类候选应在后续审核时设置正确类型和失效时间，旧示例中的数字不可直接复用为当前事实。
+可选的 `selected_excerpt` 保存用户明确采用的短例，`correction` 保存明确修改；两者限 4,000 字符，不用于保存全文。`suggest` 只从明确修改，或 `accepted` 记录中的选定短例生成候选。它输出兼容 [记忆流程](memory.md) 的 JSON，带来源、原反馈哈希和 `feedback_ids`，不导入、不发布、不扩大范围；它还更新原反馈中的关联记忆 ID，因此需要同时授权反馈目录写入和候选导出，不能作为只读查询调用。事实类候选应在后续审核时设置正确类型和失效时间，旧示例中的数字不可直接复用为当前事实。
 
-反馈记录采用唯一 ID；重跑或后续采用使用新 ID，不覆盖历史反馈。保存通过独占锁文件和原子替换保护；正常写进程结束会释放锁。崩溃可能留下锁文件：查看所选反馈目录中 `.feedback.lock` 记录的进程 ID，确认该写进程已不存在后，只清理这个已确认失效的锁再重试；不自动删除未知或仍有效的锁。删除会从当前反馈文件移除内容并保留不可复用 ID，返回关联记忆 ID；候选导出、已发布记忆、源产物和外部备份需分别处理，不能声称已全部删除。
+反馈记录采用唯一 ID；重跑或后续采用使用新 ID，不覆盖历史反馈。保存通过独占锁文件和原子替换保护；正常写进程结束会释放锁。崩溃可能留下锁文件：查看所选反馈目录中 `.feedback.lock` 记录的进程 ID，确认该写进程已不存在后，取得对该文件的清理授权后，只清理这个已确认失效的锁再重试；不自动删除未知或仍有效的锁。删除会从当前反馈文件移除内容并保留不可复用 ID，返回关联记忆 ID；候选导出、已发布记忆、源产物和外部备份需分别处理，不能声称已全部删除。
 
 ## 判断价值需要真实对照
 

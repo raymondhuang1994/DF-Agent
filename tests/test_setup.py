@@ -29,6 +29,7 @@ class SetupTests(unittest.TestCase):
         self.root = self.base / "approved skills [合成]"
         self.root.mkdir()
         self.state = self.base / "private state"
+        self.write_access = setup.access.WriteAccess("synthetic-setup", [self.base], ["setup", "output"])
         self.make_skill("etf-comment-drafts-v2")
 
     def tearDown(self):
@@ -49,7 +50,7 @@ class SetupTests(unittest.TestCase):
 
     def apply(self, plan):
         with patch.object(setup.doctor, "probe_python", return_value=fake_probe()):
-            return setup.apply_plan(self.state, plan)
+            return setup.apply_plan(self.state, plan, write_access=self.write_access)
 
     def test_plan_is_read_only_and_missing_optional_skills_do_not_block(self):
         plan = self.make_plan()
@@ -63,7 +64,10 @@ class SetupTests(unittest.TestCase):
     def test_second_process_reuses_bindings_and_reports_source_drift(self):
         plan_path = self.base / "plan.local.json"
         def run(*args):
-            result = subprocess.run([sys.executable, "-X", "utf8", "-B", str(SCRIPT), *map(str, args)], capture_output=True, text=True, encoding="utf-8", timeout=30)
+            result = subprocess.run([sys.executable, "-X", "utf8", "-B", str(SCRIPT),
+                                     "--task-id", "synthetic-setup", "--write-root", str(self.base),
+                                     "--allow-operation", "setup", "--allow-operation", "output", *map(str, args)],
+                                    capture_output=True, text=True, encoding="utf-8", timeout=30)
             self.assertEqual(result.returncode, 0, result.stderr)
             return json.loads(result.stdout)
         run("plan", "--state-dir", self.state, "--roots", self.root, "--python", sys.executable, "--output", plan_path)
@@ -112,7 +116,7 @@ class SetupTests(unittest.TestCase):
         changed_probe["packages"]["pandas"] = "3.0.1"
         with patch.object(setup.doctor, "probe_python", return_value=changed_probe):
             with self.assertRaisesRegex(setup.doctor.CheckError, "changed after planning"):
-                setup.apply_plan(self.state, plan)
+                setup.apply_plan(self.state, plan, write_access=self.write_access)
         self.assertFalse(self.state.exists())
         (self.root / "etf-comment-drafts-v2/references/contrasts.md").write_text("New content\n", encoding="utf-8")
         with self.assertRaisesRegex(setup.doctor.CheckError, "changed after planning"):
@@ -167,10 +171,87 @@ class SetupTests(unittest.TestCase):
         with self.assertRaisesRegex(setup.doctor.CheckError, "Setup plan changed"):
             self.apply(modified)
         with self.assertRaises(setup.doctor.CheckError):
-            setup.apply_plan(self.base / "another-state", plan)
+            setup.apply_plan(self.base / "another-state", plan, write_access=self.write_access)
 
     def test_status_before_setup_has_no_side_effects(self):
         self.assertEqual(setup.status(self.state)["status"], "not_configured")
+        self.assertFalse(self.state.exists())
+
+    def test_valid_plan_cannot_write_without_a_task_directory_and_operation_grant(self):
+        plan = self.make_plan()
+        with patch.object(setup.doctor, "probe_python", return_value=fake_probe()):
+            with self.assertRaises(setup.access.AccessError):
+                setup.apply_plan(self.state, plan)
+        self.assertFalse(self.state.exists())
+        output = self.base / "unapproved-output" / "plan.json"
+        with self.assertRaises(setup.access.AccessError):
+            setup.write_private_output(output, plan, self.state, [self.root])
+        self.assertFalse(output.parent.exists())
+        wrong_operation = setup.access.WriteAccess("synthetic-output-only", [self.state], ["output"])
+        with patch.object(setup.doctor, "probe_python", return_value=fake_probe()):
+            with self.assertRaises(setup.access.AccessError):
+                setup.apply_plan(self.state, plan, write_access=wrong_operation)
+        self.assertFalse(self.state.exists())
+
+    def test_denied_update_preserves_config_and_creates_no_lock(self):
+        self.apply(self.make_plan())
+        plan = self.make_plan()
+        before = {str(p.relative_to(self.state)): p.read_bytes() for p in self.state.rglob("*") if p.is_file()}
+        elsewhere = setup.access.WriteAccess("synthetic-elsewhere", [self.base / "other-state"], ["setup"])
+        with patch.object(setup.doctor, "probe_python", return_value=fake_probe()):
+            with self.assertRaises(setup.access.AccessError):
+                setup.apply_plan(self.state, plan, write_access=elsewhere)
+        self.assertEqual({str(p.relative_to(self.state)): p.read_bytes() for p in self.state.rglob("*") if p.is_file()}, before)
+        self.assertFalse((self.state / ".setup.lock").exists())
+
+    def test_cli_plan_stdout_is_read_only_and_output_requires_explicit_grant(self):
+        common = [sys.executable, "-X", "utf8", "-B", str(SCRIPT)]
+        planning = ["plan", "--state-dir", str(self.state), "--roots", str(self.root), "--python", sys.executable]
+        before = {str(p.relative_to(self.base)): p.read_bytes() for p in self.base.rglob("*") if p.is_file()}
+        result = subprocess.run(common + planning, capture_output=True, text=True, encoding="utf-8", timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["schema_version"], setup.PLAN_SCHEMA)
+        self.assertFalse(self.state.exists())
+        self.assertEqual({str(p.relative_to(self.base)): p.read_bytes() for p in self.base.rglob("*") if p.is_file()}, before)
+        output = self.base / "denied-output" / "plan.json"
+        result = subprocess.run(common + planning + ["--output", str(output)], capture_output=True, text=True, encoding="utf-8", timeout=30)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(json.loads(result.stderr)["status"], "failed")
+        self.assertFalse(output.parent.exists())
+
+    def test_plain_python_status_does_not_create_installed_helper_bytecode(self):
+        scripts = self.base / "isolated-plugin" / "skills" / "df-agent" / "scripts"
+        scripts.mkdir(parents=True)
+        for name in ("setup.py", "doctor.py", "access.py"):
+            shutil.copyfile(SCRIPT.with_name(name), scripts / name)
+        before = {str(p.relative_to(self.base)): p.read_bytes() for p in self.base.rglob("*") if p.is_file()}
+        result = subprocess.run([sys.executable, "-X", "utf8", str(scripts / "setup.py"),
+                                 "status", "--state-dir", str(self.state)],
+                                capture_output=True, text=True, encoding="utf-8", timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["status"], "not_configured")
+        self.assertEqual({str(p.relative_to(self.base)): p.read_bytes() for p in self.base.rglob("*") if p.is_file()}, before)
+        self.assertEqual(list(self.base.rglob("__pycache__")), [])
+
+    def test_powershell_plan_stdout_and_scoped_output(self):
+        powershell = shutil.which("pwsh")
+        if os.name != "nt" or not powershell:
+            self.skipTest("Native Windows PowerShell not available")
+        command = [powershell, "-NoProfile", "-File", str(PROJECT / "scripts/setup.ps1"),
+                   "-Action", "Plan", "-StateDir", str(self.state), "-Roots", str(self.root), "-PythonPath", sys.executable]
+        result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["schema_version"], setup.PLAN_SCHEMA)
+        self.assertFalse(self.state.exists())
+        output = self.base / "approved-output" / "plan.json"
+        result = subprocess.run(command + ["-OutputPath", str(output)], capture_output=True, text=True, encoding="utf-8", timeout=30)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(output.parent.exists())
+        result = subprocess.run(command + ["-OutputPath", str(output), "-TaskId", "synthetic-wrapper",
+                                "-WriteRoot", str(output.parent), "-AllowOperation", "output"],
+                                capture_output=True, text=True, encoding="utf-8", timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(output.read_text("utf-8"))["schema_version"], setup.PLAN_SCHEMA)
         self.assertFalse(self.state.exists())
 
     def test_invalid_runtime_is_not_saved(self):
@@ -187,7 +268,7 @@ class SetupTests(unittest.TestCase):
         appdata = self.base / "isolated local appdata"
         state = appdata / "DF-Agent"
         plan = setup.make_plan(state, [self.root], sys.executable)
-        setup.apply_plan(state, plan)
+        setup.apply_plan(state, plan, write_access=self.write_access)
         env = dict(os.environ, LOCALAPPDATA=str(appdata))
         result = subprocess.run([powershell, "-NoProfile", "-File", str(PROJECT / "scripts/setup.ps1"), "-Action", "Status"], capture_output=True, text=True, encoding="utf-8", env=env, timeout=30)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -216,7 +297,7 @@ class SetupTests(unittest.TestCase):
     def test_legacy_default_keeps_saved_bindings_and_memory_in_place(self):
         appdata = self.base / "legacy appdata"
         state = appdata / "TeamAdvisor"
-        setup.apply_plan(state, setup.make_plan(state, [self.root], sys.executable))
+        setup.apply_plan(state, setup.make_plan(state, [self.root], sys.executable), write_access=self.write_access)
         (state / "memory").mkdir()
         (state / "memory" / "synthetic-record.txt").write_text("保留原项目记忆", encoding="utf-8")
         before = {str(p.relative_to(state)): p.read_bytes() for p in state.rglob("*") if p.is_file()}
@@ -233,7 +314,7 @@ class SetupTests(unittest.TestCase):
     def test_new_default_wins_when_both_configurations_exist(self):
         appdata = self.base / "both appdata"
         state = appdata / "DF-Agent"
-        setup.apply_plan(state, setup.make_plan(state, [self.root], sys.executable))
+        setup.apply_plan(state, setup.make_plan(state, [self.root], sys.executable), write_access=self.write_access)
         legacy = appdata / "TeamAdvisor"
         legacy.mkdir()
         # An obsolete/corrupt legacy setting must not affect a valid new one.
@@ -251,7 +332,7 @@ class SetupTests(unittest.TestCase):
             state = appdata / name
             state.mkdir(parents=True)
             (state / setup.CONFIG_NAME).write_text("default should not be read", encoding="utf-8")
-        setup.apply_plan(self.state, setup.make_plan(self.state, [self.root], sys.executable))
+        setup.apply_plan(self.state, setup.make_plan(self.state, [self.root], sys.executable), write_access=self.write_access)
         run = self.windows_status(appdata, "-StateDir", self.state)
         self.assertEqual(run.returncode, 0, run.stderr)
         report = json.loads(run.stdout)

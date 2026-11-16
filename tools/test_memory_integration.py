@@ -24,8 +24,14 @@ def main():
     log = []
 
     def run(script, store, *arguments):
+        grants = []
+        if arguments[0] not in {'status', 'retrieve', 'list', 'history', 'summary'}:
+            grants = ['--task-id', 'synthetic-memory-integration', '--write-root', str(area),
+                      '--allow-operation', 'memory' if script == 'memory.py' else 'feedback']
+            if arguments[0] == 'suggest':
+                grants += ['--allow-operation', 'output']
         process = subprocess.run([sys.executable, '-X', 'utf8', '-B', str(SCRIPTS / script),
-                                  '--store', str(store), *map(str, arguments)],
+                                  '--store', str(store), *grants, *map(str, arguments)],
                                  text=True, encoding='utf-8', capture_output=True, timeout=30)
         if process.returncode:
             raise RuntimeError(process.stderr or process.stdout)

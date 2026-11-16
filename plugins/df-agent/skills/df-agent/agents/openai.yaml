@@ -1,4 +1,4 @@
 interface:
   display_name: "DF Agent"
-  short_description: "衔接资料、分析与 ETF 评论草稿，复用有来源的个人和项目经验"
-  default_prompt: "用 $df-agent 根据我的问题、已有资料及适用的项目记忆，选择必要步骤并完成交付。"
+  short_description: "衔接资料、分析与 ETF 草稿，原资料只读，按授权交付和保存记忆"
+  default_prompt: "用 $df-agent 按五条协作准则处理我的问题，保持原资料只读，在已确认范围内检索和交付。"

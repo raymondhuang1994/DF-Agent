@@ -31,6 +31,7 @@ class CapabilitiesTest(unittest.TestCase):
         self.base = Path(self.tmp.name)
         self.root = self.base / "批准 技能 [范围]"
         self.root.mkdir()
+        self.write_access = doctor.access.WriteAccess("synthetic-detector", [self.base], ["output"])
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -79,12 +80,38 @@ class CapabilitiesTest(unittest.TestCase):
         self.make_skill("etf-comment-drafts-v2", "评论 副本 [甲]")
         report = self.scan()
         out = self.base / "结果 [新]" / "能力 清单.json"
-        doctor.write_json(out, report, [self.root])
+        doctor.write_json(out, report, [self.root], write_access=self.write_access)
         recovered = doctor.read_json(out)
         self.assertEqual(self.item(recovered, "etf-comment-drafts-v2.draft")["source_ref"], "ROOT_1/评论 副本 [甲]/SKILL.md")
         self.assertNotIn(str(self.root), out.read_text(encoding="utf-8"))
         with self.assertRaises(doctor.CheckError):
-            doctor.write_json(out, report, [self.root])
+            doctor.write_json(out, report, [self.root], write_access=self.write_access)
+
+    def test_report_creation_requires_explicit_output_permission(self):
+        self.make_skill("etf-comment-drafts-v2")
+        report = self.scan()
+        output = self.base / "denied" / "report.json"
+        with self.assertRaises(doctor.access.AccessError):
+            doctor.write_json(output, report, [self.root])
+        self.assertFalse(output.parent.exists())
+        setup_only = doctor.access.WriteAccess("synthetic-wrong-operation", [self.base], ["setup"])
+        with self.assertRaises(doctor.access.AccessError):
+            doctor.write_json(output, report, [self.root], write_access=setup_only)
+        self.assertFalse(output.parent.exists())
+
+    def test_cli_scan_stdout_preserves_source_and_rejects_unapproved_output(self):
+        self.make_skill("etf-comment-drafts-v2")
+        before = {str(p.relative_to(self.base)): p.read_bytes() for p in self.base.rglob("*") if p.is_file()}
+        command = [sys.executable, "-X", "utf8", "-B", str(SCRIPT), "scan", "--roots", str(self.root)]
+        result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(doctor.validate(json.loads(result.stdout)))
+        self.assertEqual({str(p.relative_to(self.base)): p.read_bytes() for p in self.base.rglob("*") if p.is_file()}, before)
+        output = self.base / "unapproved" / "report.json"
+        result = subprocess.run(command + ["--output", str(output)], capture_output=True, text=True, encoding="utf-8", timeout=30)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("error", json.loads(result.stderr))
+        self.assertFalse(output.parent.exists())
 
     def test_missing_resource_is_a_real_blocker(self):
         folder = self.make_skill("etf-comment-drafts-v2")
@@ -380,7 +407,8 @@ class CapabilitiesTest(unittest.TestCase):
         wrapper = SCRIPT.with_suffix(".ps1")
         output = self.base / "包装器 中文.json"
         run = subprocess.run([powershell, "-NoProfile", "-File", str(wrapper), "-Roots", str(self.root),
-                              "-OutputPath", str(output), "-PythonPath", sys.executable, "-SessionId", "wrapper-test"],
+                              "-OutputPath", str(output), "-PythonPath", sys.executable, "-SessionId", "wrapper-test",
+                              "-TaskId", "synthetic-wrapper", "-WriteRoot", str(self.base), "-AllowOperation", "output"],
                              capture_output=True, text=True, encoding="utf-8", timeout=40)
         self.assertEqual(run.returncode, 0, run.stderr)
         self.assertTrue(doctor.validate(doctor.read_json(output)))
@@ -397,7 +425,8 @@ class CapabilitiesTest(unittest.TestCase):
         environment = os.environ.copy()
         environment["PATH"] = os.pathsep.join([str(aliases), str(Path(sys.executable).parent), environment.get("PATH", "")])
         run = subprocess.run([powershell, "-NoProfile", "-File", str(SCRIPT.with_suffix(".ps1")), "-Roots", str(self.root),
-                              "-OutputPath", str(output), "-SessionId", "auto-python-test"],
+                              "-OutputPath", str(output), "-SessionId", "auto-python-test",
+                              "-TaskId", "synthetic-wrapper", "-WriteRoot", str(self.base), "-AllowOperation", "output"],
                              capture_output=True, text=True, encoding="utf-8", timeout=40, env=environment)
         self.assertEqual(run.returncode, 0, run.stderr)
         self.assertTrue(doctor.validate(doctor.read_json(output)))

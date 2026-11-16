@@ -2,9 +2,13 @@
 """Bounded, read-only DF Agent inventory. Never runs a discovered skill."""
 from __future__ import annotations
 
+import sys
+sys.dont_write_bytecode = True
+
 import argparse
 import copy
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -12,8 +16,11 @@ import platform
 import re
 import stat
 import subprocess
-import sys
 from datetime import datetime, timedelta, timezone
+
+_ACCESS_SPEC = importlib.util.spec_from_file_location("df_agent_doctor_access", Path(__file__).with_name("access.py"))
+access = importlib.util.module_from_spec(_ACCESS_SPEC)
+_ACCESS_SPEC.loader.exec_module(access)
 
 SCHEMA = "team-advisor-capabilities/1"
 STATES = {"passed", "failed", "not_checked", "not_applicable", "unknown"}
@@ -145,12 +152,13 @@ def public_strings(value):
             public_strings(item)
 
 
-def write_json(path, value, roots=(), protected=()):
+def write_json(path, value, roots=(), protected=(), *, write_access=None):
     destination = no_links(path)
     if any(under(destination, root) for root in roots):
         raise CheckError("Report output must be outside every source root.")
     if destination in [absolute(item) for item in protected if item]:
         raise CheckError("Report output cannot replace an input file.")
+    access.require_write(write_access, destination, "output")
     public_strings(value)
     encoded = json.dumps(value, ensure_ascii=False, indent=2) + "\n"
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -651,12 +659,13 @@ def current_report(previous, roots, python, bindings=None):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    access.add_write_arguments(parser)
     commands = parser.add_subparsers(dest="command", required=True)
     collect = commands.add_parser("scan", help="Read bounded public files; do not run discovered skills")
     combine = commands.add_parser("merge-evidence", help="Recheck sources and merge same-context observations")
     for child in (collect, combine):
         child.add_argument("--roots", nargs="+", required=True)
-        child.add_argument("--output", required=True)
+        child.add_argument("--output", help="New file in an explicitly authorized output directory; omit for stdout")
         child.add_argument("--python", help="Explicit interpreter to probe for task dependencies")
         child.add_argument("--bindings", help="External JSON containing preferred_sources")
     collect.add_argument("--environment", help="Explicit current-session environment metadata JSON")
@@ -668,6 +677,7 @@ def main(argv=None):
     verify.add_argument("--report", required=True)
     args = parser.parse_args(argv)
     try:
+        write_access = access.from_args(args)
         if args.command == "validate":
             validate(read_json(args.report))
             print(json.dumps({"valid": True, "scope": "schema and internal consistency only"}))
@@ -686,14 +696,18 @@ def main(argv=None):
             report = merge(report, read_json(args.evidence), bindings)
             protected = (args.report, args.evidence, args.bindings)
         validate(report)
-        write_json(args.output, report, normalize_roots(args.roots), protected)
-        print(json.dumps({"written": True, "profiles": len(report["skills"]),
-                          "ready": sum(item["execution_ready"] is True for item in report["skills"]),
-                          "note": "Report creation succeeded; this is not a claim that every skill is ready."}))
+        if args.output:
+            write_json(args.output, report, normalize_roots(args.roots), protected, write_access=write_access)
+            result = {"written": True, "profiles": len(report["skills"]),
+                      "ready": sum(item["execution_ready"] is True for item in report["skills"]),
+                      "note": "Report creation succeeded; this is not a claim that every skill is ready."}
+        else:
+            result = report
+        print(json.dumps(result, ensure_ascii=False))
         return 0
-    except (CheckError, OSError, KeyError, TypeError, ValueError) as exc:
+    except (CheckError, access.AccessError, OSError, KeyError, TypeError, ValueError) as exc:
         # No raw OS exception paths/credential-bearing command output in shared logs.
-        message = str(exc) if isinstance(exc, CheckError) else type(exc).__name__
+        message = str(exc) if isinstance(exc, (CheckError, access.AccessError)) else type(exc).__name__
         print(json.dumps({"error": message}, ensure_ascii=False), file=sys.stderr)
         return 2
 

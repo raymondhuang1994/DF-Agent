@@ -73,6 +73,15 @@ class ReleaseTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     release.collect(base)
 
+    def test_runtime_content_cannot_ship_even_when_it_is_plain_json(self):
+        for directory in ("runtime", "indexes", "cache", "logs", "tmp"):
+            with self.subTest(directory=directory), tempfile.TemporaryDirectory(dir=ROOT.parent) as area:
+                base = Path(area)
+                (base / directory).mkdir()
+                (base / directory / "generated.json").write_text("{}", encoding="utf-8")
+                with self.assertRaises(ValueError):
+                    release.collect(base)
+
 
 if __name__ == "__main__":
     unittest.main()

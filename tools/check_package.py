@@ -19,7 +19,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = Path("plugins/df-agent")
 SKILL = PLUGIN / "skills/df-agent"
-FORBIDDEN_DIRS = {".venv", "venv", "__pycache__", "node_modules", "private", "validation-local"}
+FORBIDDEN_DIRS = {".venv", "venv", "__pycache__", "node_modules", "private", "validation-local",
+                  "runtime", "indexes", "cache", "logs", "tmp"}
 FORBIDDEN_NAMES = {".env", ".DS_Store", "auth.json", "credentials.json", "config.local.json",
                    "memory.json", "feedback.json", "memory.lock", ".feedback.lock", ".setup.lock"}
 
@@ -111,7 +112,7 @@ def check(root: Path = ROOT) -> tuple[list[Path], list[str], dict]:
         if not front or not re.search(r"(?m)^description:\s*\S", front.group(1)):
             errors.append("Missing skill description")
         for required in ("agents/openai.yaml", "scripts/doctor.py", "scripts/setup.py", "scripts/setup.ps1",
-                         "scripts/memory.py", "scripts/feedback.py", "references/setup.md",
+                         "scripts/memory.py", "scripts/feedback.py", "scripts/access.py", "references/access.md", "references/setup.md",
                          "references/memory.md", "references/quality.md"):
             if not (root / SKILL / required).is_file():
                 errors.append(f"Missing entry resource: {required}")
