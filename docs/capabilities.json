@@ -1,0 +1,477 @@
+{
+  "schema_version": "team-advisor-capabilities/1",
+  "tested_at": "2026-11-16T03:06:52.291791+00:00",
+  "environment": {
+    "host_product": "Codex Desktop",
+    "client_version": "26.1106.51428",
+    "task_mode": "Codex",
+    "execution_mode": "Local",
+    "execution_environment": "windows_native",
+    "local_access": "verified_available",
+    "shell": "PowerShell 7.6.9",
+    "repo_commit": "unknown"
+  },
+  "observation_context": {
+    "session_id": "team-advisor-local-20261116-01",
+    "scope_fingerprint": "b008c39661ce11b3fed6a45239832e277b0467ae9c2f520b890cf1cab31da6cc",
+    "runtime_fingerprint": "09ed7238ad1f2c1bb11875733ef6a431ec582db5944cfbae99632d45698681b9"
+  },
+  "skills": [
+    {
+      "skill_id": "data-lab",
+      "source_ref": "ROOT_1/data-lab/SKILL.md",
+      "source_fingerprint": {
+        "algorithm": "sha256",
+        "files": {
+          "SKILL.md": "db8d7db3ea2b53366c87af63daf692aa067d01987d64590c318fa16900b321a6",
+          "references/analysis.md": "410fb7cadff459434976294c9976e3c916dd5fa4a47b5995fd2ecc4eaf6ef560",
+          "references/platforms.md": "5a48202609aef79b13d5c89f7b11618aa0e59635b10e7c4149b8c806c769a92f",
+          "references/runtime.md": "b00a04ae68cc5824c9e48d510e5b88f1eb784266360ef923752f71f174e35657",
+          "references/safety.md": "0724d9f8c3fe8c815e4f45f33e07dd10fafdd151d0c724324c6f714f37d1df74",
+          "references/validation.md": "88000d58e96319295c49a47e698dff6ffaa6ea9e801f58b38a032d97999ab49c",
+          "scripts/datalab/__init__.py": "cfec50c58ee5f509eced52d37114317bb66b9c88631cc4607cc731e600f84100",
+          "scripts/datalab/__main__.py": "a5aa4d2243354301bf54b70ce1b687eb98fe58d20b619398db16c421d7c349c4",
+          "scripts/datalab/analysis.py": "be4e05b0fa9364901e6e13cf11cdea37ead4b7514b4fc599c7e19075af99580c",
+          "scripts/datalab/charts.py": "c4c4857ae2cd2c54d154f03e8e20f192f46d25e54854967c2c24b7244985fece",
+          "scripts/datalab/cli.py": "44a12eafe8ce7a1bc2705ca615818e7acbc3a5601900133e346b583c153aa1d4",
+          "scripts/datalab/common.py": "07ff3f93e7f9ca626a5928667db0db2488bb8604ed12895e8ab09d633502a56a",
+          "scripts/datalab/dashboard.py": "aec7ab54c4a554b28694e9598d2d2424acd17839c4aed354d98f3c572e8b78d6",
+          "scripts/datalab/grouping.py": "57b02837a668ebd1306159400e3ddb20345088aef8fddba72fc755d0129236ab",
+          "scripts/datalab/io.py": "2d45ecc7d87979a641895882bd080b7f94c2501c48784c318a7968ee7de93ae2",
+          "scripts/datalab/metrics.py": "bb06b25ea9bb3efa64b7234bddf5d41e2d261a0f136d951c456b3d131fd47f67",
+          "scripts/datalab/modeling.py": "6b17ec3c7104afe34c4233b9b8e76b1c38254ad7afded9f2255544fba94763a1",
+          "scripts/datalab/profile.py": "9eea1f598fe1e1f0eba4c0210d48f634f69785ba24d8c950b08c4c6493b4114f",
+          "scripts/datalab/quality.py": "498b4539fc18c80745ddcb977a06b04c3b5c45b0155ab4a5b5ccd0fecfcbf19e",
+          "scripts/datalab/report.py": "1b2bdfa77559204ca696df211ad5cd65b87441432cc283796663679eddbd7b62",
+          "scripts/datalab/safety.py": "ae28f8e76217a8493d7470d482eb81b7fb1d9885f85da6bd3ee3511d99c3a6ac",
+          "scripts/datalab/settings.py": "c0a862b8f808da42bb22e593a471a05db7bc90dc6d98976ef13f3fab18654721",
+          "scripts/datalab/statistics.py": "1219ec18bd5aa23c94767d7b8a77892d9f32d7ef1cade711e57f937a259e0d0c",
+          "scripts/datalab/validation.py": "4f95c4ce978a0b8eaffa4babad938aefa805410c3b7a2c727bff31b152e60a9c",
+          "scripts/datalab/word_report.py": "a29712a33497abdd93e068c49a5604493be7787953700024fea3bc12c679bf8a",
+          "scripts/requirements.txt": "97e138704c007bc4786572207de0ec8b17442a8d78dac3f9c5e4fda2b6261d33",
+          "scripts/run.py": "664f03a5b179e1ebccfa6ebb3d149aec55ef6a024b643170df6ddd97998ecd41"
+        }
+      },
+      "access_mode": "native_skill",
+      "task_profile": "data-lab.sum_table",
+      "checks": {
+        "filesystem": {
+          "status": "passed",
+          "evidence": [
+            "Logical name and description parsed from readable UTF-8 SKILL.md."
+          ]
+        },
+        "host_discovery": {
+          "status": "passed",
+          "evidence": [
+            "HOST-01: current desktop session skill catalog explicitly lists this local professional skill source; its SKILL.md was read."
+          ],
+          "observed_at": "2026-11-16T03:06:51.281298+00:00"
+        },
+        "resource_access": {
+          "status": "passed",
+          "evidence": [
+            "All task-profile public resources were read and hashed."
+          ]
+        },
+        "dependencies": {
+          "status": "passed",
+          "evidence": [
+            "pandas: 2.3.3; required >=2.2,<3",
+            "numpy: 2.5.5; required >=1.26,<3",
+            "tzdata: 2026.6; required >=2024.1",
+            "Package metadata only; binary imports and business results are not tested by this probe."
+          ]
+        },
+        "smoke_test": {
+          "status": "passed",
+          "evidence": [
+            "SUM-01: actual DataLab 0.3.0 returned direct=175, partner=75, other=0, total=250 CNY; 33 automatic checks and independent Decimal reconciliation passed.",
+            "FLOW-01: actual exported synthetic rows yielded 900/-150/300 and total=1050 CNY; native checks_status=passed and status=needs_review retained. See docs/DATALAB_VALIDATION.md and docs/SYNTHETIC_INTEGRATION.md."
+          ],
+          "observed_at": "2026-11-16T03:03:38.488136+00:00"
+        }
+      },
+      "execution_ready": true,
+      "blockers": [],
+      "limitations": [
+        "Public fingerprint covers only the explicitly listed files; it is not a full installation hash."
+      ],
+      "checked_at": "2026-11-16T03:06:51.281298+00:00"
+    },
+    {
+      "skill_id": "data-lab",
+      "source_ref": "ROOT_1/data-lab/SKILL.md",
+      "source_fingerprint": {
+        "algorithm": "sha256",
+        "files": {
+          "SKILL.md": "db8d7db3ea2b53366c87af63daf692aa067d01987d64590c318fa16900b321a6",
+          "references/charts.md": "01aa008202c705ac5e72381552ae83657249e5a91a6ab50b654e2e7ce6e0dffa",
+          "references/platforms.md": "5a48202609aef79b13d5c89f7b11618aa0e59635b10e7c4149b8c806c769a92f",
+          "references/runtime.md": "b00a04ae68cc5824c9e48d510e5b88f1eb784266360ef923752f71f174e35657",
+          "references/safety.md": "0724d9f8c3fe8c815e4f45f33e07dd10fafdd151d0c724324c6f714f37d1df74",
+          "scripts/datalab/__init__.py": "cfec50c58ee5f509eced52d37114317bb66b9c88631cc4607cc731e600f84100",
+          "scripts/datalab/__main__.py": "a5aa4d2243354301bf54b70ce1b687eb98fe58d20b619398db16c421d7c349c4",
+          "scripts/datalab/analysis.py": "be4e05b0fa9364901e6e13cf11cdea37ead4b7514b4fc599c7e19075af99580c",
+          "scripts/datalab/charts.py": "c4c4857ae2cd2c54d154f03e8e20f192f46d25e54854967c2c24b7244985fece",
+          "scripts/datalab/cli.py": "44a12eafe8ce7a1bc2705ca615818e7acbc3a5601900133e346b583c153aa1d4",
+          "scripts/datalab/common.py": "07ff3f93e7f9ca626a5928667db0db2488bb8604ed12895e8ab09d633502a56a",
+          "scripts/datalab/dashboard.py": "aec7ab54c4a554b28694e9598d2d2424acd17839c4aed354d98f3c572e8b78d6",
+          "scripts/datalab/grouping.py": "57b02837a668ebd1306159400e3ddb20345088aef8fddba72fc755d0129236ab",
+          "scripts/datalab/io.py": "2d45ecc7d87979a641895882bd080b7f94c2501c48784c318a7968ee7de93ae2",
+          "scripts/datalab/metrics.py": "bb06b25ea9bb3efa64b7234bddf5d41e2d261a0f136d951c456b3d131fd47f67",
+          "scripts/datalab/modeling.py": "6b17ec3c7104afe34c4233b9b8e76b1c38254ad7afded9f2255544fba94763a1",
+          "scripts/datalab/profile.py": "9eea1f598fe1e1f0eba4c0210d48f634f69785ba24d8c950b08c4c6493b4114f",
+          "scripts/datalab/quality.py": "498b4539fc18c80745ddcb977a06b04c3b5c45b0155ab4a5b5ccd0fecfcbf19e",
+          "scripts/datalab/report.py": "1b2bdfa77559204ca696df211ad5cd65b87441432cc283796663679eddbd7b62",
+          "scripts/datalab/safety.py": "ae28f8e76217a8493d7470d482eb81b7fb1d9885f85da6bd3ee3511d99c3a6ac",
+          "scripts/datalab/settings.py": "c0a862b8f808da42bb22e593a471a05db7bc90dc6d98976ef13f3fab18654721",
+          "scripts/datalab/statistics.py": "1219ec18bd5aa23c94767d7b8a77892d9f32d7ef1cade711e57f937a259e0d0c",
+          "scripts/datalab/validation.py": "4f95c4ce978a0b8eaffa4babad938aefa805410c3b7a2c727bff31b152e60a9c",
+          "scripts/datalab/word_report.py": "a29712a33497abdd93e068c49a5604493be7787953700024fea3bc12c679bf8a",
+          "scripts/requirements.txt": "97e138704c007bc4786572207de0ec8b17442a8d78dac3f9c5e4fda2b6261d33",
+          "scripts/run.py": "664f03a5b179e1ebccfa6ebb3d149aec55ef6a024b643170df6ddd97998ecd41"
+        }
+      },
+      "access_mode": "native_skill",
+      "task_profile": "data-lab.chart",
+      "checks": {
+        "filesystem": {
+          "status": "passed",
+          "evidence": [
+            "Logical name and description parsed from readable UTF-8 SKILL.md."
+          ]
+        },
+        "host_discovery": {
+          "status": "passed",
+          "evidence": [
+            "HOST-01: current desktop session skill catalog explicitly lists this local professional skill source; its SKILL.md was read."
+          ],
+          "observed_at": "2026-11-16T03:06:51.281298+00:00"
+        },
+        "resource_access": {
+          "status": "passed",
+          "evidence": [
+            "All task-profile public resources were read and hashed."
+          ]
+        },
+        "dependencies": {
+          "status": "passed",
+          "evidence": [
+            "pandas: 2.3.3; required >=2.2,<3",
+            "numpy: 2.5.5; required >=1.26,<3",
+            "matplotlib: 3.11.2; required >=3.8,<4",
+            "tzdata: 2026.6; required >=2024.1",
+            "Package metadata only; binary imports and business results are not tested by this probe."
+          ]
+        },
+        "smoke_test": {
+          "status": "not_checked",
+          "evidence": []
+        }
+      },
+      "execution_ready": null,
+      "blockers": [],
+      "limitations": [
+        "Public fingerprint covers only the explicitly listed files; it is not a full installation hash."
+      ],
+      "checked_at": "2026-11-16T03:06:51.281298+00:00"
+    },
+    {
+      "skill_id": "data-lab",
+      "source_ref": "ROOT_1/data-lab/SKILL.md",
+      "source_fingerprint": {
+        "algorithm": "sha256",
+        "files": {
+          "SKILL.md": "db8d7db3ea2b53366c87af63daf692aa067d01987d64590c318fa16900b321a6",
+          "references/modeling.md": "55881f79fd9bf6cd1aeb81f9094d764f60a74038f0ec139830544003a5fa1021",
+          "references/platforms.md": "5a48202609aef79b13d5c89f7b11618aa0e59635b10e7c4149b8c806c769a92f",
+          "references/runtime.md": "b00a04ae68cc5824c9e48d510e5b88f1eb784266360ef923752f71f174e35657",
+          "references/safety.md": "0724d9f8c3fe8c815e4f45f33e07dd10fafdd151d0c724324c6f714f37d1df74",
+          "scripts/datalab/__init__.py": "cfec50c58ee5f509eced52d37114317bb66b9c88631cc4607cc731e600f84100",
+          "scripts/datalab/__main__.py": "a5aa4d2243354301bf54b70ce1b687eb98fe58d20b619398db16c421d7c349c4",
+          "scripts/datalab/analysis.py": "be4e05b0fa9364901e6e13cf11cdea37ead4b7514b4fc599c7e19075af99580c",
+          "scripts/datalab/charts.py": "c4c4857ae2cd2c54d154f03e8e20f192f46d25e54854967c2c24b7244985fece",
+          "scripts/datalab/cli.py": "44a12eafe8ce7a1bc2705ca615818e7acbc3a5601900133e346b583c153aa1d4",
+          "scripts/datalab/common.py": "07ff3f93e7f9ca626a5928667db0db2488bb8604ed12895e8ab09d633502a56a",
+          "scripts/datalab/dashboard.py": "aec7ab54c4a554b28694e9598d2d2424acd17839c4aed354d98f3c572e8b78d6",
+          "scripts/datalab/grouping.py": "57b02837a668ebd1306159400e3ddb20345088aef8fddba72fc755d0129236ab",
+          "scripts/datalab/io.py": "2d45ecc7d87979a641895882bd080b7f94c2501c48784c318a7968ee7de93ae2",
+          "scripts/datalab/metrics.py": "bb06b25ea9bb3efa64b7234bddf5d41e2d261a0f136d951c456b3d131fd47f67",
+          "scripts/datalab/modeling.py": "6b17ec3c7104afe34c4233b9b8e76b1c38254ad7afded9f2255544fba94763a1",
+          "scripts/datalab/profile.py": "9eea1f598fe1e1f0eba4c0210d48f634f69785ba24d8c950b08c4c6493b4114f",
+          "scripts/datalab/quality.py": "498b4539fc18c80745ddcb977a06b04c3b5c45b0155ab4a5b5ccd0fecfcbf19e",
+          "scripts/datalab/report.py": "1b2bdfa77559204ca696df211ad5cd65b87441432cc283796663679eddbd7b62",
+          "scripts/datalab/safety.py": "ae28f8e76217a8493d7470d482eb81b7fb1d9885f85da6bd3ee3511d99c3a6ac",
+          "scripts/datalab/settings.py": "c0a862b8f808da42bb22e593a471a05db7bc90dc6d98976ef13f3fab18654721",
+          "scripts/datalab/statistics.py": "1219ec18bd5aa23c94767d7b8a77892d9f32d7ef1cade711e57f937a259e0d0c",
+          "scripts/datalab/validation.py": "4f95c4ce978a0b8eaffa4babad938aefa805410c3b7a2c727bff31b152e60a9c",
+          "scripts/datalab/word_report.py": "a29712a33497abdd93e068c49a5604493be7787953700024fea3bc12c679bf8a",
+          "scripts/requirements.txt": "97e138704c007bc4786572207de0ec8b17442a8d78dac3f9c5e4fda2b6261d33",
+          "scripts/run.py": "664f03a5b179e1ebccfa6ebb3d149aec55ef6a024b643170df6ddd97998ecd41"
+        }
+      },
+      "access_mode": "native_skill",
+      "task_profile": "data-lab.model",
+      "checks": {
+        "filesystem": {
+          "status": "passed",
+          "evidence": [
+            "Logical name and description parsed from readable UTF-8 SKILL.md."
+          ]
+        },
+        "host_discovery": {
+          "status": "passed",
+          "evidence": [
+            "HOST-01: current desktop session skill catalog explicitly lists this local professional skill source; its SKILL.md was read."
+          ],
+          "observed_at": "2026-11-16T03:06:51.281298+00:00"
+        },
+        "resource_access": {
+          "status": "passed",
+          "evidence": [
+            "All task-profile public resources were read and hashed."
+          ]
+        },
+        "dependencies": {
+          "status": "passed",
+          "evidence": [
+            "pandas: 2.3.3; required >=2.2,<3",
+            "numpy: 2.5.5; required >=1.26,<3",
+            "scipy: 1.18.1; required >=1.12,<2",
+            "scikit-learn: 1.9.1; required >=1.4,<2",
+            "tzdata: 2026.6; required >=2024.1",
+            "Package metadata only; binary imports and business results are not tested by this probe."
+          ]
+        },
+        "smoke_test": {
+          "status": "not_checked",
+          "evidence": []
+        }
+      },
+      "execution_ready": null,
+      "blockers": [],
+      "limitations": [
+        "Public fingerprint covers only the explicitly listed files; it is not a full installation hash."
+      ],
+      "checked_at": "2026-11-16T03:06:51.281298+00:00"
+    },
+    {
+      "skill_id": "data-lab",
+      "source_ref": "ROOT_1/data-lab/SKILL.md",
+      "source_fingerprint": {
+        "algorithm": "sha256",
+        "files": {
+          "SKILL.md": "db8d7db3ea2b53366c87af63daf692aa067d01987d64590c318fa16900b321a6",
+          "references/platforms.md": "5a48202609aef79b13d5c89f7b11618aa0e59635b10e7c4149b8c806c769a92f",
+          "references/runtime.md": "b00a04ae68cc5824c9e48d510e5b88f1eb784266360ef923752f71f174e35657",
+          "references/safety.md": "0724d9f8c3fe8c815e4f45f33e07dd10fafdd151d0c724324c6f714f37d1df74",
+          "references/word.md": "7d42fdda52bd70d2e1ef90d0f9f7a91289f1054f4acacf14c8a0b62498dc0a30",
+          "scripts/datalab/__init__.py": "cfec50c58ee5f509eced52d37114317bb66b9c88631cc4607cc731e600f84100",
+          "scripts/datalab/__main__.py": "a5aa4d2243354301bf54b70ce1b687eb98fe58d20b619398db16c421d7c349c4",
+          "scripts/datalab/analysis.py": "be4e05b0fa9364901e6e13cf11cdea37ead4b7514b4fc599c7e19075af99580c",
+          "scripts/datalab/charts.py": "c4c4857ae2cd2c54d154f03e8e20f192f46d25e54854967c2c24b7244985fece",
+          "scripts/datalab/cli.py": "44a12eafe8ce7a1bc2705ca615818e7acbc3a5601900133e346b583c153aa1d4",
+          "scripts/datalab/common.py": "07ff3f93e7f9ca626a5928667db0db2488bb8604ed12895e8ab09d633502a56a",
+          "scripts/datalab/dashboard.py": "aec7ab54c4a554b28694e9598d2d2424acd17839c4aed354d98f3c572e8b78d6",
+          "scripts/datalab/grouping.py": "57b02837a668ebd1306159400e3ddb20345088aef8fddba72fc755d0129236ab",
+          "scripts/datalab/io.py": "2d45ecc7d87979a641895882bd080b7f94c2501c48784c318a7968ee7de93ae2",
+          "scripts/datalab/metrics.py": "bb06b25ea9bb3efa64b7234bddf5d41e2d261a0f136d951c456b3d131fd47f67",
+          "scripts/datalab/modeling.py": "6b17ec3c7104afe34c4233b9b8e76b1c38254ad7afded9f2255544fba94763a1",
+          "scripts/datalab/profile.py": "9eea1f598fe1e1f0eba4c0210d48f634f69785ba24d8c950b08c4c6493b4114f",
+          "scripts/datalab/quality.py": "498b4539fc18c80745ddcb977a06b04c3b5c45b0155ab4a5b5ccd0fecfcbf19e",
+          "scripts/datalab/report.py": "1b2bdfa77559204ca696df211ad5cd65b87441432cc283796663679eddbd7b62",
+          "scripts/datalab/safety.py": "ae28f8e76217a8493d7470d482eb81b7fb1d9885f85da6bd3ee3511d99c3a6ac",
+          "scripts/datalab/settings.py": "c0a862b8f808da42bb22e593a471a05db7bc90dc6d98976ef13f3fab18654721",
+          "scripts/datalab/statistics.py": "1219ec18bd5aa23c94767d7b8a77892d9f32d7ef1cade711e57f937a259e0d0c",
+          "scripts/datalab/validation.py": "4f95c4ce978a0b8eaffa4babad938aefa805410c3b7a2c727bff31b152e60a9c",
+          "scripts/datalab/word_report.py": "a29712a33497abdd93e068c49a5604493be7787953700024fea3bc12c679bf8a",
+          "scripts/requirements.txt": "97e138704c007bc4786572207de0ec8b17442a8d78dac3f9c5e4fda2b6261d33",
+          "scripts/run.py": "664f03a5b179e1ebccfa6ebb3d149aec55ef6a024b643170df6ddd97998ecd41"
+        }
+      },
+      "access_mode": "native_skill",
+      "task_profile": "data-lab.word",
+      "checks": {
+        "filesystem": {
+          "status": "passed",
+          "evidence": [
+            "Logical name and description parsed from readable UTF-8 SKILL.md."
+          ]
+        },
+        "host_discovery": {
+          "status": "passed",
+          "evidence": [
+            "HOST-01: current desktop session skill catalog explicitly lists this local professional skill source; its SKILL.md was read."
+          ],
+          "observed_at": "2026-11-16T03:06:51.281298+00:00"
+        },
+        "resource_access": {
+          "status": "passed",
+          "evidence": [
+            "All task-profile public resources were read and hashed."
+          ]
+        },
+        "dependencies": {
+          "status": "passed",
+          "evidence": [
+            "pandas: 2.3.3; required >=2.2,<3",
+            "numpy: 2.5.5; required >=1.26,<3",
+            "python-docx: 1.2.0; required >=1.1,<2",
+            "tzdata: 2026.6; required >=2024.1",
+            "Package metadata only; binary imports and business results are not tested by this probe."
+          ]
+        },
+        "smoke_test": {
+          "status": "not_checked",
+          "evidence": []
+        }
+      },
+      "execution_ready": null,
+      "blockers": [],
+      "limitations": [
+        "Public fingerprint covers only the explicitly listed files; it is not a full installation hash."
+      ],
+      "checked_at": "2026-11-16T03:06:51.281298+00:00"
+    },
+    {
+      "skill_id": "df-mcp",
+      "source_ref": "ROOT_1/df-mcp/SKILL.md",
+      "source_fingerprint": {
+        "algorithm": "sha256",
+        "files": {
+          "SKILL.md": "8e426cb97d4120cc15b005676ba996c91e7c73c012b10b2baf6257141b65fd2e",
+          "references/cli.md": "4977cd1e84ba9513e35adf1b16f46bf10ccd7e4793ebbf256c45ab76971b19fd",
+          "references/formats.md": "01b886c5636f3e5178e6156a488bee04aca9d8c7405dc5fcf45e1332e56ea5b8",
+          "references/onboarding.md": "6e03362408652403bca4b68c2b1a34559255c1398e8709f4309f627bbb837090",
+          "references/requirements.md": "2d9b42f06023084b654405d15d8213addabd1cbaea20dc2059d6fd4a60dd9a51",
+          "references/sop.md": "3dd958a8546d3cfaddc5fd6f76da76d9bc88aebc5529e2561e3a7ce1cc89a7bf",
+          "references/tools.md": "fa3d54a1684e528547e1d21cf27bef13785041a6f2053a5be1d867009dde28e5",
+          "scripts/df-check.py": "485e7f5207f757a2b16a6368a29a0b74f6e5552bb5454ccfcd175881d94312d6",
+          "scripts/df-tool.py": "c91eaf42aa00fe05cfa9e044a74555b284df86678e610c2713d5ab1b6c9c7671"
+        }
+      },
+      "access_mode": "native_skill",
+      "task_profile": "df-mcp.lookup",
+      "checks": {
+        "filesystem": {
+          "status": "passed",
+          "evidence": [
+            "Logical name and description parsed from readable UTF-8 SKILL.md."
+          ]
+        },
+        "host_discovery": {
+          "status": "passed",
+          "evidence": [
+            "HOST-01: current desktop session skill catalog explicitly lists this local professional skill source; its SKILL.md was read."
+          ],
+          "observed_at": "2026-11-16T03:06:51.281298+00:00"
+        },
+        "resource_access": {
+          "status": "passed",
+          "evidence": [
+            "All task-profile public resources were read and hashed."
+          ]
+        },
+        "dependencies": {
+          "status": "unknown",
+          "evidence": [
+            "A real reader connection and approved source must be tested separately; no status/index command was run."
+          ]
+        },
+        "smoke_test": {
+          "status": "passed",
+          "evidence": [
+            "SYN-DF-01: real reader 0.6.2 local provider indexed exactly four synthetic files; job complete; version-pinned inspect/read/export succeeded and exported bytes were read. Source hashes unchanged.",
+            "Only the isolated synthetic local source was tested; corporate source connections, identities and scopes remain unverified. Dependencies stay unknown, so production lookup readiness is not asserted."
+          ],
+          "observed_at": "2026-11-16T03:02:52.788534+00:00"
+        }
+      },
+      "execution_ready": null,
+      "blockers": [],
+      "limitations": [
+        "Public fingerprint covers only the explicitly listed files; it is not a full installation hash."
+      ],
+      "checked_at": "2026-11-16T03:06:51.281298+00:00"
+    },
+    {
+      "skill_id": "etf-comment-drafts-v2",
+      "source_ref": "ROOT_1/etf-comment-drafts-v2/SKILL.md",
+      "source_fingerprint": {
+        "algorithm": "sha256",
+        "files": {
+          "SKILL.md": "404ad0b90fd9ef9b8c10c9f08d05059eee295a6e2ceb6f0e6be9d8394bcb12b7",
+          "references/contrasts.md": "799afbd19121b0ef04e7d23e21c6a01395c11b2aa06a29a7af7a614c033e6675",
+          "references/evaluation.md": "eb18f74af65df1fbd3123e99dad868def5b40d8edfe70e570843fa5a4c783915",
+          "references/private-library.md": "a6f9d085f22958a924a850518790069f614d588e59618223892ee23a25690cb1",
+          "scripts/select_examples.py": "9e678fe24df845dfe61076b0a2774f23ab3c080f4ba4256887b590b72987fa3e"
+        }
+      },
+      "access_mode": "native_skill",
+      "task_profile": "etf-comment-drafts-v2.draft",
+      "checks": {
+        "filesystem": {
+          "status": "passed",
+          "evidence": [
+            "Logical name and description parsed from readable UTF-8 SKILL.md."
+          ]
+        },
+        "host_discovery": {
+          "status": "passed",
+          "evidence": [
+            "HOST-01: current desktop session skill catalog explicitly lists this local professional skill source; its SKILL.md was read."
+          ],
+          "observed_at": "2026-11-16T03:06:51.281298+00:00"
+        },
+        "resource_access": {
+          "status": "passed",
+          "evidence": [
+            "All task-profile public resources were read and hashed."
+          ]
+        },
+        "dependencies": {
+          "status": "not_applicable",
+          "evidence": [
+            "Public-reference drafting does not require Python or a private library."
+          ]
+        },
+        "smoke_test": {
+          "status": "passed",
+          "evidence": [
+            "ETF-01/FLOW-01: explicitly selected four public synthetic references with empty preferences; agent generated and reviewed exactly three internal simulation drafts from actual evidence. No private library read or publication. See docs/FORWARD_TEST.md and docs/SYNTHETIC_INTEGRATION.md."
+          ],
+          "observed_at": "2026-11-16T03:04:40.127213+00:00"
+        }
+      },
+      "execution_ready": true,
+      "blockers": [],
+      "limitations": [
+        "Public fingerprint covers only the explicitly listed files; it is not a full installation hash.",
+        "Use explicit approved library configuration or public references; do not run an implicit private-library lookup."
+      ],
+      "checked_at": "2026-11-16T03:06:51.281298+00:00"
+    }
+  ],
+  "coverage_limitations": [],
+  "source_bindings": {
+    "preferred_sources": {}
+  },
+  "source_selection": {
+    "data-lab": {
+      "status": "selected",
+      "source_ref": "ROOT_1/data-lab/SKILL.md",
+      "reason": "unique_host_observed_source"
+    },
+    "df-mcp": {
+      "status": "selected",
+      "source_ref": "ROOT_1/df-mcp/SKILL.md",
+      "reason": "unique_host_observed_source"
+    },
+    "etf-comment-drafts-v2": {
+      "status": "selected",
+      "source_ref": "ROOT_1/etf-comment-drafts-v2/SKILL.md",
+      "reason": "unique_host_observed_source"
+    }
+  }
+}

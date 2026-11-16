@@ -1,0 +1,64 @@
+{
+  "test": "data-lab.sum_table",
+  "fixture": "channels.csv",
+  "source_sha256": "c3958fa59fd9f803455b9ef9701728ce0f3180073b7695802ab6a51190c70ca9",
+  "rows": 5,
+  "groups": {
+    "direct": 175,
+    "partner": 75,
+    "other": 0
+  },
+  "total": 250,
+  "unit": "currency",
+  "currency": "CNY",
+  "checks_status": "passed",
+  "status": "needs_review",
+  "automatic_check_count": 33,
+  "coverage": {
+    "source": {
+      "status": "passed",
+      "detail": "指纹、读取稳定性及源数据结构已检查。",
+      "quality_checks": [
+        "quality:min_rows",
+        "quality:required_columns"
+      ],
+      "quality_status": "passed"
+    },
+    "calculations": {
+      "status": "partial",
+      "checked": [
+        "independent_total",
+        "independent_by_group",
+        "independent_by_period"
+      ],
+      "not_checked": [
+        "表格计算：profile",
+        "表格计算：numeric_summary",
+        "computation中的有效/排除样本数及原因明细；本项只复算指标值和分组/周期记录数。"
+      ]
+    },
+    "claims": {
+      "status": "passed",
+      "checked": 2,
+      "passed": 2,
+      "detail": "只验证结构化数值声明；证据计算是否独立复核见calculations，语义和因果仍见narrative。"
+    },
+    "narrative": {
+      "status": "not_checked",
+      "detail": "自由叙述、业务解释、因果语言和建议仍需独立审阅；结构化声明通过也不证明这些内容正确。"
+    },
+    "visual": {
+      "status": "not_checked",
+      "detail": "仅检查图像文件/数据表引用，不检查图轴、像素内容、交互或Word版式。"
+    }
+  },
+  "independent_checks": "passed",
+  "selected_skill_files_unchanged": true,
+  "selected_skill_file_count": 12,
+  "audit_count": 1,
+  "software_guards_only": true,
+  "charts_tested": false,
+  "modeling_tested": false,
+  "word_tested": false,
+  "real_df_mcp_tested": false
+}

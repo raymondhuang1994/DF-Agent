@@ -1,0 +1,76 @@
+{
+  "status": "passed",
+  "synthetic_only": true,
+  "checks": {
+    "feedback_to_candidate": true,
+    "candidate_invisible": true,
+    "reviewed_persistence": true,
+    "other_project_excluded": true,
+    "unreviewed_excluded": true,
+    "other_owner_excluded": true
+  },
+  "separate_cli_processes": 12,
+  "calls": [
+    {
+      "script": "memory.py",
+      "command": "init",
+      "status": "initialized"
+    },
+    {
+      "script": "feedback.py",
+      "command": "init",
+      "status": "initialized"
+    },
+    {
+      "script": "feedback.py",
+      "command": "record",
+      "status": "recorded"
+    },
+    {
+      "script": "feedback.py",
+      "command": "suggest",
+      "status": "candidate_exported"
+    },
+    {
+      "script": "memory.py",
+      "command": "candidate",
+      "status": "candidate"
+    },
+    {
+      "script": "memory.py",
+      "command": "retrieve",
+      "status": "ok"
+    },
+    {
+      "script": "memory.py",
+      "command": "publish",
+      "status": "publish"
+    },
+    {
+      "script": "memory.py",
+      "command": "candidate",
+      "status": "candidate"
+    },
+    {
+      "script": "memory.py",
+      "command": "publish",
+      "status": "publish"
+    },
+    {
+      "script": "memory.py",
+      "command": "candidate",
+      "status": "candidate"
+    },
+    {
+      "script": "memory.py",
+      "command": "retrieve",
+      "status": "ok"
+    },
+    {
+      "script": "memory.py",
+      "command": "retrieve",
+      "status": "ok"
+    }
+  ],
+  "business_value_measured": false
+}

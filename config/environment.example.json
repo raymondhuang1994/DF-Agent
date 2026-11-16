@@ -1,0 +1,10 @@
+{
+  "host_product": "unknown",
+  "client_version": "unknown",
+  "task_mode": "unknown",
+  "execution_mode": "unknown",
+  "execution_environment": "unknown",
+  "local_access": "unknown",
+  "shell": "PowerShell",
+  "repo_commit": "unknown"
+}

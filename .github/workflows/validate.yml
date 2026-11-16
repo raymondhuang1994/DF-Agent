@@ -1,0 +1,19 @@
+name: Validate plugin
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run standard-library regression suite
+        run: python -X utf8 -B -m unittest discover -s tests -v
+      - name: Validate release contents and fingerprints
+        run: python -X utf8 -B tools/check_package.py

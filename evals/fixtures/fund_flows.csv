@@ -1,0 +1,4 @@
+month,product_id,creation_amount,redemption_amount,currency,source_id,source_version
+2026-10,SYN-A,1200,300,CNY,SYN-FLOWS,1
+2026-10,SYN-B,800,950,CNY,SYN-FLOWS,1
+2026-10,SYN-C,500,200,CNY,SYN-FLOWS,1

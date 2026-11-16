@@ -1,0 +1,15 @@
+{
+  "name": "team-advisor-pilot",
+  "interface": {
+    "displayName": "团队顾问试点"
+  },
+  "plugins": [
+    {
+      "name": "team-advisor-entry",
+      "source": {
+        "source": "local",
+        "path": "./plugins/team-advisor-entry"
+      }
+    }
+  ]
+}

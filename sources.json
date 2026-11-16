@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "release": "team-advisor-entry/0.3.0",
+  "created_on": "2026-11-16",
+  "original_handoff": {
+    "filename": "TeamAdvisor-Windows-Development-Handoff-2026-11-16.zip",
+    "sha256": "43323c0d7e2c48b5bdb59007098345e62d643b7b8b143867e5abb404ec0e43e0"
+  },
+  "adaptations": [
+    "Entry resolves actual professional skill sources instead of sibling bundled snapshots.",
+    "Read-only bounded detector with externally observed host/task evidence and task-specific readiness.",
+    "ETF style selection always uses an explicit approved library or public synthetic examples.",
+    "Local reader integration and independent DataLab runtime validated against synthetic sources only.",
+    "Persistent per-machine setup with source/runtime drift detection.",
+    "Explicit scoped feedback and reviewed personal/project memory with expiry, supersession, rollback and deletion.",
+    "Real local plugin installation, native discovery in a fresh CLI session, and held-out memory-guided synthetic task."
+  ],
+  "professional_sources": {
+    "data-lab": {
+      "source": "existing local installation; not redistributed",
+      "logical_ref": "ROOT_1/data-lab/SKILL.md",
+      "public_files_sha256": {
+        "SKILL.md": "db8d7db3ea2b53366c87af63daf692aa067d01987d64590c318fa16900b321a6",
+        "references/analysis.md": "410fb7cadff459434976294c9976e3c916dd5fa4a47b5995fd2ecc4eaf6ef560",
+        "references/platforms.md": "5a48202609aef79b13d5c89f7b11618aa0e59635b10e7c4149b8c806c769a92f",
+        "references/runtime.md": "b00a04ae68cc5824c9e48d510e5b88f1eb784266360ef923752f71f174e35657",
+        "references/safety.md": "0724d9f8c3fe8c815e4f45f33e07dd10fafdd151d0c724324c6f714f37d1df74",
+        "references/validation.md": "88000d58e96319295c49a47e698dff6ffaa6ea9e801f58b38a032d97999ab49c",
+        "scripts/datalab/__init__.py": "cfec50c58ee5f509eced52d37114317bb66b9c88631cc4607cc731e600f84100",
+        "scripts/datalab/__main__.py": "a5aa4d2243354301bf54b70ce1b687eb98fe58d20b619398db16c421d7c349c4",
+        "scripts/datalab/analysis.py": "be4e05b0fa9364901e6e13cf11cdea37ead4b7514b4fc599c7e19075af99580c",
+        "scripts/datalab/charts.py": "c4c4857ae2cd2c54d154f03e8e20f192f46d25e54854967c2c24b7244985fece",
+        "scripts/datalab/cli.py": "44a12eafe8ce7a1bc2705ca615818e7acbc3a5601900133e346b583c153aa1d4",
+        "scripts/datalab/common.py": "07ff3f93e7f9ca626a5928667db0db2488bb8604ed12895e8ab09d633502a56a",
+        "scripts/datalab/dashboard.py": "aec7ab54c4a554b28694e9598d2d2424acd17839c4aed354d98f3c572e8b78d6",
+        "scripts/datalab/grouping.py": "57b02837a668ebd1306159400e3ddb20345088aef8fddba72fc755d0129236ab",
+        "scripts/datalab/io.py": "2d45ecc7d87979a641895882bd080b7f94c2501c48784c318a7968ee7de93ae2",
+        "scripts/datalab/metrics.py": "bb06b25ea9bb3efa64b7234bddf5d41e2d261a0f136d951c456b3d131fd47f67",
+        "scripts/datalab/modeling.py": "6b17ec3c7104afe34c4233b9b8e76b1c38254ad7afded9f2255544fba94763a1",
+        "scripts/datalab/profile.py": "9eea1f598fe1e1f0eba4c0210d48f634f69785ba24d8c950b08c4c6493b4114f",
+        "scripts/datalab/quality.py": "498b4539fc18c80745ddcb977a06b04c3b5c45b0155ab4a5b5ccd0fecfcbf19e",
+        "scripts/datalab/report.py": "1b2bdfa77559204ca696df211ad5cd65b87441432cc283796663679eddbd7b62",
+        "scripts/datalab/safety.py": "ae28f8e76217a8493d7470d482eb81b7fb1d9885f85da6bd3ee3511d99c3a6ac",
+        "scripts/datalab/settings.py": "c0a862b8f808da42bb22e593a471a05db7bc90dc6d98976ef13f3fab18654721",
+        "scripts/datalab/statistics.py": "1219ec18bd5aa23c94767d7b8a77892d9f32d7ef1cade711e57f937a259e0d0c",
+        "scripts/datalab/validation.py": "4f95c4ce978a0b8eaffa4babad938aefa805410c3b7a2c727bff31b152e60a9c",
+        "scripts/datalab/word_report.py": "a29712a33497abdd93e068c49a5604493be7787953700024fea3bc12c679bf8a",
+        "scripts/requirements.txt": "97e138704c007bc4786572207de0ec8b17442a8d78dac3f9c5e4fda2b6261d33",
+        "scripts/run.py": "664f03a5b179e1ebccfa6ebb3d149aec55ef6a024b643170df6ddd97998ecd41",
+        "references/charts.md": "01aa008202c705ac5e72381552ae83657249e5a91a6ab50b654e2e7ce6e0dffa",
+        "references/modeling.md": "55881f79fd9bf6cd1aeb81f9094d764f60a74038f0ec139830544003a5fa1021",
+        "references/word.md": "7d42fdda52bd70d2e1ef90d0f9f7a91289f1054f4acacf14c8a0b62498dc0a30"
+      }
+    },
+    "df-mcp": {
+      "source": "existing local installation; not redistributed",
+      "logical_ref": "ROOT_1/df-mcp/SKILL.md",
+      "public_files_sha256": {
+        "SKILL.md": "8e426cb97d4120cc15b005676ba996c91e7c73c012b10b2baf6257141b65fd2e",
+        "references/cli.md": "4977cd1e84ba9513e35adf1b16f46bf10ccd7e4793ebbf256c45ab76971b19fd",
+        "references/formats.md": "01b886c5636f3e5178e6156a488bee04aca9d8c7405dc5fcf45e1332e56ea5b8",
+        "references/onboarding.md": "6e03362408652403bca4b68c2b1a34559255c1398e8709f4309f627bbb837090",
+        "references/requirements.md": "2d9b42f06023084b654405d15d8213addabd1cbaea20dc2059d6fd4a60dd9a51",
+        "references/sop.md": "3dd958a8546d3cfaddc5fd6f76da76d9bc88aebc5529e2561e3a7ce1cc89a7bf",
+        "references/tools.md": "fa3d54a1684e528547e1d21cf27bef13785041a6f2053a5be1d867009dde28e5",
+        "scripts/df-check.py": "485e7f5207f757a2b16a6368a29a0b74f6e5552bb5454ccfcd175881d94312d6",
+        "scripts/df-tool.py": "c91eaf42aa00fe05cfa9e044a74555b284df86678e610c2713d5ab1b6c9c7671"
+      }
+    },
+    "etf-comment-drafts-v2": {
+      "source": "existing local installation; not redistributed",
+      "logical_ref": "ROOT_1/etf-comment-drafts-v2/SKILL.md",
+      "public_files_sha256": {
+        "SKILL.md": "404ad0b90fd9ef9b8c10c9f08d05059eee295a6e2ceb6f0e6be9d8394bcb12b7",
+        "references/contrasts.md": "799afbd19121b0ef04e7d23e21c6a01395c11b2aa06a29a7af7a614c033e6675",
+        "references/evaluation.md": "eb18f74af65df1fbd3123e99dad868def5b40d8edfe70e570843fa5a4c783915",
+        "references/private-library.md": "a6f9d085f22958a924a850518790069f614d588e59618223892ee23a25690cb1",
+        "scripts/select_examples.py": "9e678fe24df845dfe61076b0a2774f23ab3c080f4ba4256887b590b72987fa3e"
+      }
+    }
+  },
+  "entry_files_sha256": {
+    ".codex-plugin/plugin.json": "311a4d25b731dcc11df7aeac5ac1df403b6c6f0fad9699874585d41d24518726",
+    "plugin.json": "06f2ae7d1fe6d2ecf60fe60fd3d9b1bba1a3d946cd3c26423186296a30997c3c",
+    "skills/team-advisor/agents/openai.yaml": "e8a6e17e3c41773f7ba7a6205b9e937377b725e1e99767ad92f7f23c20d4acde",
+    "skills/team-advisor/references/catalog.md": "6b7e98a0363684cb5a433b8d35036f1ea2bf799c7dff751974934576c9ce8b31",
+    "skills/team-advisor/references/handoff.md": "d7220396c16224323b59d3dd49b04a4551856121e87979de57f032e9d680c82f",
+    "skills/team-advisor/references/memory.md": "df0298e9ef938656c86c997269ad258a4f71ce1c3f5f99e8a8b0709ea53948aa",
+    "skills/team-advisor/references/public-examples/cases.jsonl": "2e6f0ae30b97165a966fff63cd69d77efe3924d757db9fbb2e7c8c2c710f1213",
+    "skills/team-advisor/references/public-examples/profile.json": "35a6a9e231455529ee28bef5f39753b6a46306ae87f4921cbc18b8d9eec0a11d",
+    "skills/team-advisor/references/quality.md": "8f68908d84d8d9f47d59578db58f191841c864effa665c9870e54cfd961edba4",
+    "skills/team-advisor/references/runtime.md": "6c459b48ce675f68cb03212638f55cf5d56a67ade5962878d234a2c742558302",
+    "skills/team-advisor/references/setup.md": "0497faa603164734c9ca59e84317c23a62ad0bb3356e36baebfca257d34ef623",
+    "skills/team-advisor/references/sources-and-capabilities.md": "8b5dfbd61c7cfa6b76faf35b45d8c86e57f273dbee811dae9af85f4b74bb6a04",
+    "skills/team-advisor/scripts/doctor.ps1": "b80cc57a65dd12a411b5aec50ebca8a48a49f6f602acbcf9502398ef1b9afad9",
+    "skills/team-advisor/scripts/doctor.py": "29cb5040c2068f554a53eb41fb9f222e6d29c986942828c34a77d4b0302babb1",
+    "skills/team-advisor/scripts/feedback.py": "85faf06d1902a9d1e0cb36af20aa3d604a3d3d8e2e27874409658d1cee4643fe",
+    "skills/team-advisor/scripts/memory.py": "9f3757c8750a5eba718d761de1138bfd4f657f30b6914419ffe0f9926a346365",
+    "skills/team-advisor/scripts/setup.ps1": "b79feae1ec7b88969c06b00e6a3b1eeb9a27457a8672c3411ef5de3d48ea2097",
+    "skills/team-advisor/scripts/setup.py": "29f1406ed94827513b993273abf3c4fecf1f04c0db23d582456c395e06568072",
+    "skills/team-advisor/SKILL.md": "c0cbf41fa8691723db001644cd039b8ec405adc91dd079aaf0bd80f6db395d37"
+  },
+  "notes": [
+    "Professional skill code and proprietary data are not redistributed in this release.",
+    "Hashes pin observed public resources only, not entire installations or private libraries.",
+    "Local marketplace installation and fresh CLI native discovery verified; organization workspace import and colleague validation remain untested."
+  ]
+}

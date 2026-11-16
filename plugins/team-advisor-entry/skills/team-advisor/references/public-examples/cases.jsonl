@@ -1,0 +1,4 @@
+{"id":"public-observation","style_text":"哦，原来是按这个规则选进去的。这个思路挺直观。","category":"observation","language":"zh-CN","tags":["规则","机制","简短"],"preference":"unrated","split":"reference","cluster":"public-rule-reaction","source":{"kind":"synthetic"}}
+{"id":"public-question","style_text":"我想先搞清一件事：这篮子里谁占得最多？","category":"question","language":"zh-CN","tags":["持仓","成分","提问"],"preference":"unrated","split":"reference","cluster":"public-holdings-question","source":{"kind":"synthetic"}}
+{"id":"public-comparison","style_text":"两只的费用能不能放一行？来回翻有点费劲。","category":"comparison","language":"zh-CN","tags":["费用","比较","信息缺口"],"preference":"unrated","split":"reference","cluster":"public-fee-comparison","source":{"kind":"synthetic"}}
+{"id":"public-intention","style_text":"想省一点挑选的精力，这个方向倒是合拍。","category":"intention","language":"zh-CN","tags":["选择","偏好","想法"],"preference":"unrated","split":"reference","cluster":"public-choice-preference","source":{"kind":"synthetic"}}

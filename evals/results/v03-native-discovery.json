@@ -1,0 +1,14 @@
+{
+  "observed_on": "2026-11-16",
+  "host": "current Windows desktop client bundled CLI",
+  "plugin_id": "team-advisor-entry@team-advisor-pilot",
+  "version": "0.3.0",
+  "installed": true,
+  "enabled": true,
+  "new_session": "ephemeral read-only CLI session",
+  "native_skill_name": "team-advisor-entry:team-advisor",
+  "skill_read_from": "PLUGIN_CACHE/team-advisor-pilot/team-advisor-entry/0.3.0/skills/team-advisor/SKILL.md",
+  "filesystem_search_used_to_infer_discovery": false,
+  "organization_import_tested": false,
+  "colleague_machines_tested": false
+}

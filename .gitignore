@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+*.local.json
+validation-local/
+dist/
+*.zip
+memory.json
+feedback.json
+memory.lock
+.feedback.lock
+.setup.lock

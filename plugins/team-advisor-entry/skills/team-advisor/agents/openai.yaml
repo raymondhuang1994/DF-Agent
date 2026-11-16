@@ -1,0 +1,4 @@
+interface:
+  display_name: "团队顾问（本地技能试点）"
+  short_description: "衔接资料、分析与 ETF 评论草稿，复用有来源的个人和项目经验"
+  default_prompt: "用 $team-advisor 根据我的问题、已有资料及适用的项目记忆，选择必要步骤并完成交付。"

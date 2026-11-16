@@ -1,0 +1,4 @@
+product_id,product_name,approval_status,approved_date,effective_date,management_fee_pct,custody_fee_pct,other_expense_pct,annual_total_expense_pct,currency,source_id,source_version
+SYN-A,示例宽基 ETF A,approved,2026-10-30,2026-11-01,0.15,0.05,0.05,0.25,CNY,SYN-PRODUCTS,1
+SYN-B,示例债券 ETF B,approved,2026-10-30,2026-11-01,0.20,0.05,0.10,0.35,CNY,SYN-PRODUCTS,1
+SYN-C,示例行业 ETF C,approved,2026-10-30,2026-11-01,0.10,0.05,0.10,0.25,CNY,SYN-PRODUCTS,1
