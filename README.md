@@ -2,6 +2,18 @@
 
 在当前 Windows 桌面软件的本地会话中，选择并衔接已安装的 DataLab、df-mcp 和 ETF 评论草稿 v2。本插件提供顾问入口、本机配置、任务质量反馈及有来源的个人/项目记忆；专业技能继续使用每台电脑现有的安装。
 
+仓库已公开。[下载固定版 0.3.1](https://github.com/raymondhuang1994/TeamAdvisor/releases/tag/v0.3.1) · [安装说明](docs/LOCAL_INSTALL.md) · [试用与测试指南](docs/TRY_IT.md)
+
+## 可以做什么
+
+- **选择必要流程：**已有资料就直接分析或写作，需要补证据时再使用已配置、获准的资料来源。可串联“找资料 → 算指标 → 写草稿”。
+- **汇总与解释数据：**通过 DataLab 做资金流、渠道收入等表格分析，核对单位、期间和分项合计，保留结果依据。
+- **按产品资料写评论：**通过 ETF 评论技能生成指定数量的内部草稿，区分产品事实和风格参考，不从旧案例补造业绩。
+- **复用本机设置和项目经验：**保存技能来源与解释器；按个人、项目读取用户已明确要求记住的口径、偏好和经验，支持更新、回退与删除。
+- **记录明确反馈：**保留用户采纳、修改或拒绝的原因，将选中的内容整理成记忆候选；候选经明确授权发布后才能供后续任务使用。
+
+插件不自带这三项专业技能，也不自动读取所有聊天或同事电脑。公司资料连接由每位使用者按自己的资料范围和权限配置。
+
 ## 使用
 
 安装后在新会话调用 `$team-advisor`，直接描述任务：
@@ -46,7 +58,7 @@ python -X utf8 -B tools/check_package.py
 python -X utf8 -B tools/check_package.py --zip '<项目外目录>\TeamAdvisor-Entry-Source-0.3.1.zip' --plugin-zip '<项目外目录>\TeamAdvisor-Entry-0.3.1.zip'
 ```
 
-GitHub Actions 已配置相同的 Windows 回归和发布检查。工作流文件存在不代表远端 CI 已运行。
+固定版 0.3.1 的 [GitHub Windows CI](https://github.com/raymondhuang1994/TeamAdvisor/actions/runs/43805073364) 已通过回归与发布指纹检查；本机安装、新会话发现及合成任务结果见 [验证报告](docs/VALIDATION.md)。后续提交的状态以该提交自己的运行结果为准。
 
 ## 文件与数据边界
 

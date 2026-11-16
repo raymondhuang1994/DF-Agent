@@ -4,7 +4,7 @@
 
 ## 从 GitHub 安装
 
-仓库：[raymondhuang1994/TeamAdvisor](https://github.com/raymondhuang1994/TeamAdvisor)。当前为私有仓库，安装者需要仓库读取权限和自己的 GitHub 登录；共享插件不共享本机记忆与业务资料权限。
+仓库：[raymondhuang1994/TeamAdvisor](https://github.com/raymondhuang1994/TeamAdvisor) 已公开，可直接查看、下载和克隆，不需要单独授予仓库权限。共享插件不共享本机记忆与业务资料权限。
 
 ```powershell
 codex plugin marketplace add https://github.com/raymondhuang1994/TeamAdvisor.git --ref v0.3.1 --json
@@ -32,3 +32,5 @@ codex plugin list --marketplace team-advisor-pilot --json
 确认安装版本与启用状态，再在新会话检查原生入口。不同来源（本地目录和 Git）不要重复注册同名 marketplace；迁移来源时先查看当前 marketplace 列表，保留原配置并使用客户端支持的管理命令。
 
 每台同事电脑各跑一次合成表格和三条评论任务；文件扫描、宿主发现、依赖、真实结果分别记证据。合成 reader 成功不等于真实公司资料连接通过。组织工作区导入及管理员分发需在实际账户验收。
+
+可复制的测试提示词、示例文件和预期结果见 [试用与测试指南](TRY_IT.md)。
