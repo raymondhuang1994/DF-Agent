@@ -4,37 +4,22 @@
 
 ## DataLab
 
-检查实际 `scripts/run.py` 与 `references/runtime.md`；使用合适的 Python。`doctor` 检查运行环境，不能证明插件安装或分析结果。先核对实际 CLI 支持的参数，再执行；旧版与新版可能有不同输出限制。没有图表需求且版本支持时可以 `--no-charts`，不能因此省去用户要求的图表。
+检查实际 `scripts/run.py` 与 `references/runtime.md`；复用已保存且可用的 Python，不静默改用 PATH 中的另一解释器。`doctor` 检查运行环境，不能证明插件安装或分析结果。先核对实际 CLI 支持的参数，再执行；旧版与新版可能有不同输出限制。没有图表需求且版本支持时可以 `--no-charts`，不能因此省去用户要求的图表。
 
-已观察的 0.3.0 要求 Python 3.11+；更重要的是依照实际版本识别任务所需包。不得仅因完整依赖集合中的可选包缺失，就判所有任务不可用。需要补依赖时使用获准的独立新环境，保留原技能和已有环境。
+已观察的 0.3.0 要求 Python 3.11+；更重要的是依照实际版本识别任务所需包。按实际输入格式检查依赖；入口检测器的 `--input-format csv|tsv|xlsx` 可区分 XLSX 的 `openpyxl` 需要。未指定格式时格式相关依赖保持未知。不得仅因完整依赖集合中的可选包缺失，就判所有任务不可用。需要补依赖时使用获准的独立新环境，保留原技能和已有环境。
 
 运行前从所选版本确认输出、缓存、日志及临时文件的真实落点，并提供受支持的显式设置；不能仅设置 TMP/TEMP 就宣称隔离完成。无法控制的写入会阻止该步骤，仍可完成对话内分析。合成测试与正式分析都将输入和输出分开，例如 `inputs/channels.csv` 与尚不存在的 `results/run-001/`。新版拒绝已有输出目录（即便为空），也拒绝写进原数据父目录；不要预建 run 目录或用其他工具绕过。后续复核/报告使用新文件名。保留 `result.json`、实际表格、配置及 `checks.json`。
 
-## df-mcp
+## df-mcp：消费来源与证据，不接管 reader
 
-1. 优先使用与所选资料源对应的真实 `team_drive_*` reader；先核对工具 schema 和来源授权。
-2. 本地安装若带 `scripts/df-tool.py` 与 reader runtime，也可以使用其受支持的 Python CLI；仅没有 MCP 工具不等于该能力缺失。读实际 `references/cli.md`、`requirements.md`。
-3. 默认文档库为 `N:\digital finance`，先匹配候选名称和路径，取得正文读取/扫描范围的确认。只有来源、子目录范围，以及索引/缓存/日志/临时文件各自的本机落点和写入操作已确认，才运行 `status` 或实际证据读取。完整 0.6.2 的首次连接可能启动 broker 与扫描；不将 `status` 当作无副作用的纯文件探测。
-4. 使用实际 reader 支持的参数或配置，将运行文件放到获准的本机运行目录。四类默认目录为 `%LOCALAPPDATA%\DF-Agent\runtime\{indexes,cache,logs,tmp}`；reader 若仅支持单一状态根，可使用 `runtime\indexes\df-mcp` 保存该 provider 的完整状态，核对所有派生路径留在这一范围。不要声称四类文件已物理分开。插件的 `access.py prepare` 只建目录，不配置第三方 reader，也不建立索引。若 reader 无法指定/证明这些位置，停止会写文件的调用；不能借首次连接把缓存或索引写回资料库。
+读取实际 df-mcp Skill 和它维护的接口文档。来源 profile/catalog、身份核验、索引状态、检索、分页、版本化读取、导出与恢复都通过它执行；不在 DF Agent 中复制这些实现，也不凭磁盘路径猜 profile ID。
 
-所选版本支持 `df-init.py plan` 时，可先只输出配置计划；`$providerStateRoot` 为已选运行目录下的 `indexes\df-mcp`，`$confirmedSource` 仅为本轮确认的资料范围：
+- Router 将用户目标、已确认的来源范围和查询条件交给 df-mcp 的来源解析接口。若返回多个候选或范围不能满足问题，只澄清影响选源的差异；不能把可用的子目录悄悄当成整库。
+- 使用 df-mcp 返回的实际接入信息和原生结果。新建来源、改变范围、刷新索引或恢复故障遵循该技能的权限与操作流程。旧版没有来源目录接口时，只复用它能明确解析的既有配置；缺失能力要说明，不由入口另建 catalog 或手工拼配置。
+- 服务健康、`queryable`、清单完整、文件提取完整是不同证据。入口不重新计算 reader 的技术判定；Advisor 检查实际范围、版本、失败项、分页和内容缺口是否足以支持本次结论。技术通过仍不证明业务全集或资料权威性。
+- 来源变更、失效访问、超时、分页冲突或运行目录错误交回 df-mcp 原始响应的错误/`next_action` 流程；不在入口重试旧游标、改根、清锁或重建索引来绕过错误。
 
-```powershell
-& $chosenPython -X utf8 -B $dfInit plan --choice local --source $confirmedSource --state-dir $providerStateRoot
-```
-
-核对计划中的 `config.state_dir`、`config_path` 和该版本实际派生的索引/日志/缓存位置都留在已授权 provider 目录，再决定是否应用。`plan` 不等于配置已保存或索引已建立；应用计划、启动 broker、首次扫描仍需对应写入及资料范围授权。不要通过新建配置覆盖原有 reader 状态。
-
-静态版本/公共文件检查不需要连接业务资料。所选版本支持时，`df-init.py profiles --state-dir <已确认状态根>` 仅登记保存的配置：0.6.2 最多检查 128 个直接 profile 配置，不打开来源、索引或认证缓存，返回 `sources_checked=false`。其输出不能证明连接健康、索引完成或缓存新鲜度；也不要为安装检查读取未获准的状态根。未发现可独立证明实时健康的离线命令时，状态保持待测。
-
-真实调用以文档为准，使用已确认配置与参数文件，例如：
-
-```powershell
-& $chosenPython -X utf8 -B $dfTool status --config $confirmedConfig
-& $chosenPython -X utf8 -B $dfTool inspect --config $confirmedConfig --params-file $inspectParams --paginate
-```
-
-这些是有相应资料范围、独立运行目录及执行授权后才运行的示例；`$confirmedConfig` 需包含该版本实际支持的运行文件落点，不能虚构通用参数。`--paginate` 在同一调用内消费游标；不把游标跨进程复用。不因任务缺资料而自动初始化、改根目录或开另一个索引。模拟/降级路径与真实检索分开记录。
+有计算需求时，将 df-mcp 可访问的同版本导出、范围及缺口交给 DataLab，保留来源定位；源表中的公式缓存、缺失值与业务重复不能因“读取成功”而被忽略。若只是引用一项已给出且有出处的数值，可省去计算。具体消费和审核项见 [交接与证据审核](handoff.md)。
 
 ## ETF v2：显式指定风格来源
 

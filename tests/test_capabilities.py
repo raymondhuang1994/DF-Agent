@@ -62,6 +62,7 @@ class CapabilitiesTest(unittest.TestCase):
         item = self.item(report, profile)
         return {"environment": copy.deepcopy(report["environment"]),
                 "observation_context": copy.deepcopy(report["observation_context"]),
+                "task_input_format": report.get("task_input_format"),
                 "observed_at": (datetime.now(timezone.utc) - timedelta(minutes=2)).isoformat(), "skills": [{
                     "source_ref": item["source_ref"], "task_profile": profile,
                     "source_fingerprint": copy.deepcopy(item["source_fingerprint"]),
@@ -229,7 +230,7 @@ class CapabilitiesTest(unittest.TestCase):
     def test_missing_chart_dependency_does_not_block_csv_profile(self):
         self.make_skill("data-lab")
         with patch.object(doctor, "probe_python", return_value=fake_probe()):
-            report = self.scan(python=sys.executable)
+            report = self.scan(python=sys.executable, input_format="csv")
         self.assertEqual(self.item(report, "data-lab.sum_table")["checks"]["dependencies"]["status"], "passed")
         self.assertEqual(self.item(report, "data-lab.chart")["checks"]["dependencies"]["status"], "failed")
         self.assertIsNone(self.item(report, "data-lab.sum_table")["execution_ready"])

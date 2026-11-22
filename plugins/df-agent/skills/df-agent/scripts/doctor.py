@@ -28,6 +28,9 @@ CHECKS = ("filesystem", "host_discovery", "resource_access", "dependencies", "sm
 EXTERNAL_CHECKS = {"host_discovery", "dependencies", "smoke_test"}
 MAX_BYTES = 2_000_000
 MAX_CHILDREN = 256
+MAX_PACKAGE_FILES = 512
+MAX_PACKAGE_BYTES = 64 * 1024 * 1024
+INPUT_FORMATS = ("csv", "tsv", "xlsx")
 ENV_KEYS = ("host_product", "client_version", "task_mode", "execution_mode",
             "execution_environment", "local_access", "shell", "repo_commit")
 PROFILES = {
@@ -57,7 +60,7 @@ SKILLS = ("data-lab", "df-mcp", "etf-comment-drafts-v2")
 DATALAB_CORE = tuple("scripts/datalab/" + name + ".py" for name in (
     "__init__", "cli", "analysis", "common", "grouping", "io", "metrics", "profile",
     "quality", "report", "settings", "statistics", "validation"))
-# Public code only; no recursive walk, private examples, credentials, caches or vendor tree.
+# Public code only; a reader package additionally verifies its bounded manifest/runtime.
 OPTIONAL = {
     "data-lab": tuple("scripts/datalab/" + name + ".py" for name in (
         "__init__", "__main__", "cli", "analysis", "charts", "common", "grouping", "io",
@@ -136,6 +139,93 @@ def read_json(path):
         return json.loads(read_bytes(path).decode("utf-8-sig"))
     except (UnicodeError, json.JSONDecodeError):
         raise CheckError("Input must be valid UTF-8 JSON.") from None
+
+
+def reader_package_fingerprint(directory):
+    """Hash actual packaged code, including vendors; never execute it or read state."""
+    files, failures = {}, []
+    manifest_path = directory / "PACKAGE_MANIFEST.json"
+    if not manifest_path.exists():
+        return files, failures, ["Reader package manifest unavailable; installation integrity was not verified."], False
+    try:
+        raw = read_bytes(manifest_path)
+        files["PACKAGE_MANIFEST.json"] = digest(raw)
+        manifest = json.loads(raw.decode("utf-8-sig"))
+        if not isinstance(manifest, dict):
+            raise CheckError("Reader package manifest must be an object.")
+        entries = manifest.get("files")
+        if manifest.get("schema") != "df-mcp-skill-package-v1" or not isinstance(entries, list) or not 1 <= len(entries) <= MAX_PACKAGE_FILES:
+            raise CheckError("Reader package manifest has an invalid schema or file count.")
+        declared, total, actual_total = {}, 0, 0
+        for entry in entries:
+            if actual_total > MAX_PACKAGE_BYTES:
+                raise CheckError("Reader package exceeds the bounded read budget.")
+            relative = entry.get("path") if isinstance(entry, dict) else None
+            if not isinstance(relative, str):
+                raise CheckError("Reader package manifest contains an invalid path.")
+            path = PurePosixPath(relative)
+            if (path.is_absolute() or ".." in path.parts or "\\" in relative or ":" in relative
+                    or relative != path.as_posix() or not path.parts
+                    or (path.parts[0] not in {"runtime", "scripts", "references", "agents", "assets"}
+                        and relative not in {"SKILL.md", "INSTALL.md", "LICENSE"})):
+                raise CheckError("Reader package manifest is outside the public package boundary.")
+            key = relative.casefold()
+            size, sha = entry.get("bytes"), entry.get("sha256")
+            if key in declared or type(size) is not int or size < 0 or not isinstance(sha, str) or not re.fullmatch(r"[a-f0-9]{64}", sha):
+                raise CheckError("Reader package manifest contains an invalid or duplicate file entry.")
+            total += size
+            if total > MAX_PACKAGE_BYTES:
+                raise CheckError("Reader package manifest exceeds the bounded package budget.")
+            declared[key] = relative
+            try:
+                content = read_bytes(directory / relative)
+                actual_total += len(content)
+                if actual_total > MAX_PACKAGE_BYTES:
+                    raise CheckError("Reader package exceeds the bounded read budget.")
+                files[relative] = digest(content)
+                if len(content) != size or files[relative] != sha:
+                    failures.append("Reader package checksum mismatch: " + relative)
+            except (OSError, CheckError):
+                failures.append("Reader package file unavailable: " + relative)
+        # A new importable module can change behavior without changing the manifest.
+        # Walk only this package's public runtime and refuse redirected children.
+        runtime = directory / "runtime"
+        no_links(runtime)
+        visited = 0
+        if runtime.is_dir():
+            def unreadable_runtime(_error):
+                raise CheckError("Reader runtime could not be completely enumerated.")
+            for folder, directories, names in os.walk(runtime, followlinks=False, onerror=unreadable_runtime):
+                no_links(folder)
+                directories[:] = sorted(name for name in directories if name != "__pycache__")
+                visited += len(directories)
+                if visited > MAX_PACKAGE_FILES:
+                    raise CheckError("Reader runtime exceeds the bounded entry count.")
+                for name in directories:
+                    no_links(Path(folder) / name)
+                for name in sorted(names):
+                    visited += 1
+                    if visited > MAX_PACKAGE_FILES:
+                        raise CheckError("Reader runtime exceeds the bounded file count.")
+                    if not name.casefold().endswith((".py", ".pyi", ".pyc", ".pyd", ".so", ".dll")):
+                        continue
+                    resource = Path(folder) / name
+                    relative = resource.relative_to(directory).as_posix()
+                    if relative.casefold() not in declared:
+                        content = read_bytes(resource)
+                        actual_total += len(content)
+                        if actual_total > MAX_PACKAGE_BYTES:
+                            raise CheckError("Reader package exceeds the bounded read budget.")
+                        files[relative] = digest(content)
+                        failures.append("Reader runtime code is not in the package manifest: " + relative)
+        for core in ("runtime/python/team_drive/engine.py", "runtime/python/team_drive/fs_access.py", "runtime/python/team_drive/extract.py"):
+            if core.casefold() not in declared:
+                failures.append("Reader core module absent from package manifest: " + core)
+        return files, failures, [], not failures
+    except (OSError, CheckError, UnicodeError, ValueError, TypeError) as exc:
+        message = str(exc) if isinstance(exc, CheckError) else type(exc).__name__
+        failures.append("Reader package verification failed: " + message)
+        return files, failures, [], False
 
 
 def public_strings(value):
@@ -295,7 +385,7 @@ def compatible(version, expression):
     return True
 
 
-def dependency_check(skill_id, profile, probe, directory):
+def dependency_check(skill_id, profile, probe, directory, input_format=None):
     if skill_id == "etf-comment-drafts-v2":
         return check("not_applicable", "Public-reference drafting does not require Python or a private library.")
     if skill_id == "df-mcp":
@@ -336,7 +426,13 @@ def dependency_check(skill_id, profile, probe, directory):
     evidence, failures, uncertain = [], [], ["unresolved requirements include"] if unsupported_include else []
     if unsupported_include:
         evidence.append("Requirements include/constraint files were not followed; their constraints need separate verification.")
-    for package in PROFILES[profile]["packages"]:
+    packages = PROFILES[profile]["packages"] + (("openpyxl",) if input_format == "xlsx" else ())
+    if input_format is None:
+        uncertain.append("input format unspecified")
+        evidence.append("Input format unspecified; use --input-format csv, tsv or xlsx for task-specific readiness.")
+    else:
+        evidence.append("Input format: " + input_format)
+    for package in packages:
         installed = probe["packages"].get(package)
         wanted = constraints[package]
         display_constraint = wanted if re.fullmatch(r"\s*(?:>=|<=|==|>|<)\s*\d+(?:\.\d+)*(?:\s*,\s*(?:>=|<=|==|>|<)\s*\d+(?:\.\d+)*)*\s*", wanted) else "unsupported constraint syntax" if wanted else "any installed version"
@@ -353,7 +449,7 @@ def dependency_check(skill_id, profile, probe, directory):
     return check("failed" if failures else "unknown" if uncertain else "passed", *evidence)
 
 
-def record(candidate, profile, probe):
+def record(candidate, profile, probe, input_format=None):
     timestamp = now()
     skill_id = candidate["skill_id"]
     directory = candidate["directory"]
@@ -384,9 +480,21 @@ def record(candidate, profile, probe):
                     limitations.append("Optional public file skipped: " + relative)
         fingerprint = {"algorithm": "sha256", "files": files}
         checks["resource_access"] = check("failed", *("Required public resource unavailable: " + name for name in missing)) if missing else check("passed", "All task-profile public resources were read and hashed.")
+        if skill_id == "df-mcp":
+            package_files, package_failures, package_limits, verified = reader_package_fingerprint(directory)
+            files.update(package_files)
+            limitations.extend(package_limits)
+            if package_failures:
+                checks["resource_access"] = check("failed", *checks["resource_access"]["evidence"], *package_failures)
+            elif verified:
+                limitations = [value for value in limitations if not value.startswith("Public fingerprint covers only")]
+                limitations.append("Reader manifest files and runtime code were checked; source access and extraction remain untested.")
+                checks["resource_access"]["evidence"].append("Reader manifest checksums matched the actual package, including runtime and vendor code.")
+            elif not missing:
+                checks["resource_access"] = check("unknown", *checks["resource_access"]["evidence"], *package_limits)
         if skill_id == "etf-comment-drafts-v2":
             limitations.append("Use explicit approved library configuration or public references; do not run an implicit private-library lookup.")
-    checks["dependencies"] = dependency_check(skill_id, profile, probe, directory)
+    checks["dependencies"] = dependency_check(skill_id, profile, probe, directory, input_format)
     return {"skill_id": skill_id, "source_ref": candidate["source_ref"], "source_fingerprint": fingerprint,
             "access_mode": "native_skill", "task_profile": profile, "checks": checks,
             "execution_ready": None, "blockers": [], "limitations": limitations, "checked_at": timestamp}
@@ -471,7 +579,9 @@ def environment_values(provided=None):
     return values
 
 
-def scan(roots, python=None, environment=None, session_id="unspecified", bindings=None):
+def scan(roots, python=None, environment=None, session_id="unspecified", bindings=None, input_format=None):
+    if input_format is not None and input_format not in INPUT_FORMATS:
+        raise CheckError("Input format must be csv, tsv or xlsx.")
     roots = normalize_roots(roots)
     candidates, coverage = discover(roots)
     probe = probe_python(python)
@@ -479,15 +589,15 @@ def scan(roots, python=None, environment=None, session_id="unspecified", binding
     env["local_access"] = "verified_available" if candidates else "unknown"
     context = {"session_id": session_id,
                "scope_fingerprint": digest({"computer": platform.node(), "roots": [str(root) for root in roots]}),
-               "runtime_fingerprint": digest({"python": str(absolute(python)), "probe": probe}) if python else None}
+               "runtime_fingerprint": digest({"python": str(absolute(python)), "probe": probe, "input_format": input_format}) if python else None}
     public_strings(context)
     report = {"schema_version": SCHEMA, "tested_at": now(), "environment": env,
-              "observation_context": context, "skills": [], "coverage_limitations": coverage}
+              "observation_context": context, "task_input_format": input_format, "skills": [], "coverage_limitations": coverage}
     for profile in PROFILES:
         skill_id = profile.rsplit(".", 1)[0]
         matches = [candidate for candidate in candidates if candidate["skill_id"] == skill_id]
         if matches:
-            report["skills"].extend(record(candidate, profile, probe) for candidate in matches)
+            report["skills"].extend(record(candidate, profile, probe, input_format) for candidate in matches)
         else:
             item = {"skill_id": skill_id, "source_ref": None, "source_fingerprint": None,
                     "access_mode": "native_skill", "task_profile": profile,
@@ -504,6 +614,8 @@ def validate(report):
     if not isinstance(report, dict) or report.get("schema_version") != SCHEMA:
         raise CheckError("Unsupported capability report schema.")
     stamp(report.get("tested_at"))
+    if report.get("task_input_format") is not None and report["task_input_format"] not in INPUT_FORMATS:
+        raise CheckError("Unknown task input format.")
     if set(report.get("environment", {})) != set(ENV_KEYS):
         raise CheckError("Report environment does not match the contract.")
     context = report.get("observation_context", {})
@@ -593,6 +705,8 @@ def merge(report, evidence, bindings=None):
         raise CheckError("Set an explicit scan --session-id before adding observed host or task evidence.")
     if evidence.get("environment") != report["environment"] or evidence.get("observation_context") != report["observation_context"]:
         raise CheckError("Evidence environment/context mismatch; observe this session and runtime again.")
+    if evidence.get("task_input_format") != report.get("task_input_format"):
+        raise CheckError("Evidence input format mismatch; verify the actual task format again.")
     observed_time = stamp(evidence.get("observed_at"))
     if not evidence.get("observed_at"):
         raise CheckError("Evidence requires an observed_at timestamp.")
@@ -638,9 +752,12 @@ def merge(report, evidence, bindings=None):
     return updated
 
 
-def current_report(previous, roots, python, bindings=None):
+def current_report(previous, roots, python, bindings=None, input_format=None):
     """Recheck public source bytes and runtime before accepting older observations."""
-    current = scan(roots, python, previous["environment"], previous["observation_context"]["session_id"], bindings)
+    previous_format = previous.get("task_input_format")
+    if input_format is not None and input_format != previous_format:
+        raise CheckError("Input format changed; collect a new report and new evidence.")
+    current = scan(roots, python, previous["environment"], previous["observation_context"]["session_id"], bindings, previous_format)
     if current["observation_context"] != previous["observation_context"] or current["environment"] != previous["environment"]:
         raise CheckError("Scope/runtime/environment changed; collect a new report and new evidence.")
     old = {(item["source_ref"], item["task_profile"]): item for item in previous["skills"]}
@@ -668,6 +785,7 @@ def main(argv=None):
         child.add_argument("--output", help="New file in an explicitly authorized output directory; omit for stdout")
         child.add_argument("--python", help="Explicit interpreter to probe for task dependencies")
         child.add_argument("--bindings", help="External JSON containing preferred_sources")
+        child.add_argument("--input-format", choices=INPUT_FORMATS, help="Actual DataLab input format; omission leaves format-dependent readiness unverified")
     collect.add_argument("--environment", help="Explicit current-session environment metadata JSON")
     collect.add_argument("--session-id", default="unspecified")
     collect.add_argument("--host-evidence", help="Same-context evidence from a prior unchanged scan")
@@ -685,14 +803,14 @@ def main(argv=None):
         bindings = read_json(args.bindings) if args.bindings else None
         if args.command == "scan":
             report = scan(args.roots, args.python, read_json(args.environment) if args.environment else None,
-                          args.session_id, bindings)
+                          args.session_id, bindings, args.input_format)
             if args.host_evidence:
                 report = merge(report, read_json(args.host_evidence), bindings)
             protected = (args.bindings, args.environment, args.host_evidence)
         else:
             report = read_json(args.report)
             validate(report)
-            current_report(report, args.roots, args.python, bindings)
+            current_report(report, args.roots, args.python, bindings, args.input_format)
             report = merge(report, read_json(args.evidence), bindings)
             protected = (args.report, args.evidence, args.bindings)
         validate(report)

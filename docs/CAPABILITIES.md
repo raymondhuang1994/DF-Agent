@@ -1,6 +1,6 @@
 # DF Agent 本机能力检测与证据合并
 
-检测器只读取明确技能根目录的一层子目录、`SKILL.md` 和代码中列出的公共资源。每根最多 256 个直接条目、每文件最多 2 MB、最多 16 个根；超过限制会保留覆盖缺口。不会递归搜索、跟随符号链接或 Windows 重解析点、查找私库、读取凭据、运行专业技能脚本、连接资料库或修复环境。
+检测器从明确技能根目录的一层子目录发现 `SKILL.md`，读取代码中列出的公共资源。每根最多 256 个直接条目、每文件最多 2 MB、最多 16 个根；超过限制会保留覆盖缺口。对于带清单的 df-mcp，额外核对 `PACKAGE_MANIFEST.json` 中的公共文件，并有界枚举该安装的 `runtime` 代码以发现未列项；清单最多 512 项、包读取总量最多 64 MB。不会跟随符号链接或 Windows 重解析点、查找私库、读取凭据、运行专业技能脚本、连接资料库或修复环境。
 
 需要已有 Python 3.11+，检测器本身只用标准库。`-PythonPath` 是用于依赖检测的实际解释器；省略时 PowerShell 枚举 PATH 中全部匹配的 Python，先过滤 Windows Store 应用别名，再选择已有解释器，找不到就报告缺项。程序不会下载安装解释器。依赖探测只读取包元数据，不导入第三方库；实际加载和功能由烟雾测试确认。
 
@@ -36,25 +36,28 @@ python -X utf8 -B plugins/df-agent/skills/df-agent/scripts/doctor.py scan --root
 
 | task_profile | 检测范围 |
 |---|---|
-| `data-lab.sum_table` | CSV 无图汇总所需公共资源、pandas/numpy/tzdata |
+| `data-lab.sum_table` | 表格汇总公共资源、pandas/numpy/tzdata；XLSX 额外需要 openpyxl |
 | `data-lab.chart` | 图表资源、数值库和 matplotlib |
 | `data-lab.model` | 建模资源、数值库、scipy/scikit-learn |
 | `data-lab.word` | Word 资源、数值库和 python-docx；PDF/视觉检查另验 |
-| `df-mcp.lookup` | 资料流程的公共资源；真实 reader/来源依赖仍待验证 |
+| `df-mcp.lookup` | 公共资源及可用清单的核心/vendor 文件完整性；真实 reader/来源依赖仍待验证 |
 | `etf-comment-drafts-v2.draft` | 公共参考草稿，不要求 Python 或私库；选例器为可选路径 |
+
+指定 `--input-format csv|tsv|xlsx`（PowerShell：`-InputFormat`）以绑定本次任务格式。未指定格式时依赖结果保留 `unknown`；CSV/TSV 不要求 openpyxl，XLSX 必须验证它。各任务的 `smoke_test` 仍需实际执行。df-mcp 无清单时包完整性也保持未知；有清单时任何缺失、变更、越界或未列入的运行代码都会阻止宣称完整性通过。
 
 Python 包版本与安装 Skill 的公开 `requirements.txt` 比较；可解析数字版本范围之外的约束（如 `~=`、markers、extras、直接 URL）保持未知，不回退到默认范围判定通过。同一包的重复约束合并检查。`-r` / `-c` 引用不自动跟随，其约束保持待核验。报告不回显可能携带令牌的未知约束全文。缺少 matplotlib 不使 CSV 汇总失败。包元数据通过不证明二进制可加载。ETF 草稿的依赖可标记有理由的 `not_applicable`，其他必要检查不能用这一状态跳过。
 
-项目扩展字段 `source_selection` 保存来源选择，`coverage_limitations` 保存扫描缺口。`observation_context` 保存本轮 `session_id`、机器与显式根组合的不可逆 `scope_fingerprint`、解释器及其探测结果的 `runtime_fingerprint`。这些用于一致性核对，不是权限凭据、平台 API 或可信签名。
+项目扩展字段 `source_selection` 保存来源选择，`coverage_limitations` 保存扫描缺口。`observation_context` 保存本轮 `session_id`、机器与显式根组合的不可逆 `scope_fingerprint`、解释器、探测结果及输入格式的 `runtime_fingerprint`。这些用于一致性核对，不是权限凭据、平台 API 或可信签名。
 
 ## 合入真实观察
 
-先取得静态报告，再由当前会话观察者准备证据 JSON。直接复制报告的 `environment` 和 `observation_context`；为每个实测任务复制其完整 `source_fingerprint`，不能只复制 SKILL.md 哈希。示意结构：
+先取得静态报告，再由当前会话观察者准备证据 JSON。直接复制报告的 `environment`、`observation_context` 和 `task_input_format`；为每个实测任务复制其完整 `source_fingerprint`，不能只复制 SKILL.md 哈希。示意结构：
 
 ```json
 {
   "environment": {},
   "observation_context": {},
+  "task_input_format": "csv",
   "observed_at": "2026-11-16T09:00:00+08:00",
   "skills": [
     {
@@ -72,13 +75,13 @@ Python 包版本与安装 Skill 的公开 `requirements.txt` 比较；可解析�
 
 空对象只是本页占位说明，实际证据必须复制报告内完整对象。证据只允许合入 `host_discovery`、`dependencies`、`smoke_test`，不能覆盖文件检测。真实依赖失败不能被外部“通过”标签覆盖。DF 的 `dependencies=passed` 需要获准来源上的实际 reader 状态证据；仅看到脚本或进程不够。文件流程另写 `access_mode: explicit_file_playbook`，不能因此把原生发现改为通过。
 
-时间填写实际观察时间。合并为每个检查项保存 `observed_at`；默认采用证据批次时间，也可在检查项内明确更早的观察时间。已有检查只接受同刻相同状态或更晚的观察；较旧的通过不能覆盖较新的失败，同刻矛盾也会拒绝。不同检查项独立比较，因此首次烟雾测试可以早于静态报告或另一项宿主观察。检查时间不能晚于其证据批次，未来超过本机当前 UTC 60 秒的观察会拒绝。旧版已合入宿主/烟雾测试结果但缺少逐项时间的报告需重新观察；纯静态旧报告仍可合并。
+时间填写实际观察时间。合并为每个检查项保存 `observed_at`；默认采用证据批次时间，也可在检查项内明确更早的观察时间。已有检查只接受同刻相同状态或更晚的观察；较旧的通过不能覆盖较新的失败，同刻矛盾也会拒绝。不同检查项独立比较，因此首次烟雾测试可以早于静态报告或另一项宿主观察。检查时间不能晚于其证据批次，未来超过本机当前 UTC 60 秒的观察会拒绝。旧版已合入宿主/烟雾测试结果但缺少逐项时间的报告需重新观察；纯静态旧报告仍可读取；合并前如新版本检测得到不同指纹，应重新采集，不能沿用旧就绪结论。
 
 ```text
 python -X utf8 -B plugins/df-agent/skills/df-agent/scripts/doctor.py merge-evidence --report REPORT_PATH --evidence OBSERVED_EVIDENCE_PATH --roots ROOT_PATH_1 --python TASK_PYTHON
 ```
 
-合并前会重新读显式根、公共资源和解释器元数据。来源、候选集合、范围、会话、环境或运行时不一致时拒绝沿用；应重新采集受影响的观察。`scan --host-evidence` / `-HostEvidencePath` 也支持同一契约，用于同轮、同范围、来源和依赖未变时的重复采集。准备证据不等于执行测试；工具只能检查一致性，不能证明观察者文字真实。
+合并前会重新读显式根、公共资源和解释器元数据。来源、候选集合、范围、会话、环境、运行时或输入格式不一致时拒绝沿用；应重新采集受影响的观察。`scan --host-evidence` / `-HostEvidencePath` 也支持同一契约，用于同轮、同范围、来源和依赖未变时的重复采集。准备证据不等于执行测试；工具只能检查一致性，不能证明观察者文字真实。
 
 日志/证据只使用测试编号、别名和结果摘要。共享报告会拒绝个人绝对路径；不要放业务正文、私库案例、凭据或连接令牌。
 

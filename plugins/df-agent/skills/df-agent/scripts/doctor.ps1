@@ -6,6 +6,7 @@ param(
     [string]$HostEvidencePath,
     [string]$BindingsPath,
     [string]$EnvironmentPath,
+    [ValidateSet('csv', 'tsv', 'xlsx')][string]$InputFormat,
     [string]$SessionId = 'unspecified',
     [string]$TaskId,
     [string[]]$WriteRoot,
@@ -34,5 +35,6 @@ if ($OutputPath) { $DoctorArguments += @('--output', $OutputPath) }
 if ($HostEvidencePath) { $DoctorArguments += @('--host-evidence', $HostEvidencePath) }
 if ($BindingsPath) { $DoctorArguments += @('--bindings', $BindingsPath) }
 if ($EnvironmentPath) { $DoctorArguments += @('--environment', $EnvironmentPath) }
+if ($InputFormat) { $DoctorArguments += @('--input-format', $InputFormat) }
 & $PythonPath @DoctorArguments
 if ($LASTEXITCODE -ne 0) { throw "Capability detector failed (exit $LASTEXITCODE). Dependency failures inside a valid report are reported separately." }
