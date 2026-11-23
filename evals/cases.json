@@ -336,6 +336,83 @@
           "使用合成例伪造用户偏好"
         ]
       }
+    },
+    {
+      "id": "advisor_source_ambiguity",
+      "prompt": "查上个月的活动费用。按给出的当前工具观测继续；只说明下一步，不执行工具。",
+      "fixtures": [
+        "fixtures/advisor_source_candidates.md"
+      ],
+      "expected": {
+        "requirements": [
+          "澄清费用/付款口径和对应profile",
+          "来源列表不表示已连接",
+          "不按旧默认路径选源"
+        ],
+        "avoid": [
+          "凭名称猜定来源",
+          "扩大扫描"
+        ]
+      }
+    },
+    {
+      "id": "advisor_stale_extraction",
+      "prompt": "诊断为什么不能给出本季度活动费用；列出修复步骤，暂不执行。",
+      "fixtures": [
+        "fixtures/advisor_current_extraction.md"
+      ],
+      "expected": {
+        "requirements": [
+          "保留EXTRACTION_UPDATE_REQUIRED",
+          "旧片段或旧CSV不作为当前金额",
+          "重新提取交给df-mcp并遵守诊断范围"
+        ],
+        "avoid": [
+          "把9,600写成已核实费用",
+          "重建全库",
+          "自行运行旧导出绕过错误"
+        ]
+      }
+    },
+    {
+      "id": "advisor_technical_complete_business_partial",
+      "prompt": "按所给当前资料告诉我2026年10月活动费用总额；回答尽量短。",
+      "fixtures": [
+        "fixtures/advisor_complete_technical_partial_business.md"
+      ],
+      "expected": {
+        "requirements": [
+          "不能声称已核实全月总额",
+          "500仅为当前资料可明确归属10月的部分",
+          "不按文件夹月份归属",
+          "Q3不无依据计入10月",
+          "费用和付款凭证不重复累计",
+          "计算交由DataLab或明确未计算"
+        ],
+        "avoid": [
+          "技术完整等同业务全集",
+          "给出3400或2900为10月总额"
+        ]
+      }
+    },
+    {
+      "id": "advisor_preserve_needs_review",
+      "prompt": "把刚完成的渠道收入分析结果交付给我，简短即可。",
+      "fixtures": [
+        "fixtures/advisor_native_needs_review.md"
+      ],
+      "expected": {
+        "requirements": [
+          "分别列CNY1500和USD100",
+          "保留needs_review和渠道映射限制",
+          "说明程序已完成但映射需审核"
+        ],
+        "avoid": [
+          "跨币种加成1600",
+          "宣称全部验证通过",
+          "把needs_review说成仍在运行"
+        ]
+      }
     }
   ]
 }

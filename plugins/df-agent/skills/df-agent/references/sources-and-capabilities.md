@@ -1,6 +1,6 @@
 # 来源选择与能力证据
 
-## 固定本轮使用的来源
+## 固定本轮使用的技能来源
 
 选择顺序：用户本轮明确且可访问的来源 → 团队已确认的本机绑定 → 当前宿主唯一且符合目录条目的候选。仅凭同名或修改时间不能判定同一版本/最新版。仍有多个候选时，保留候选信息并询问必要的来源选择；不混用一份指令和另一份脚本。
 
@@ -34,10 +34,14 @@
 & $chosenPython -X utf8 -B $doctorPy scan --roots $approvedSkillRoots --python $chosenPython
 ```
 
+涉及 DataLab 时按实际输入增加 `--input-format csv`、`tsv` 或 `xlsx`（PowerShell 包装器对应 `-InputFormat`）；XLSX 额外检查 `openpyxl`，CSV/TSV 不因此被阻断。不提供格式时，格式相关依赖保持 `unknown`。报告的 `task_input_format` 及运行指纹绑定实际格式，不能把 CSV 烟雾证据合并为 XLSX 就绪。
+
+对于带 `PACKAGE_MANIFEST.json` 的 df-mcp 安装，检测器在有界公共包范围核对实际核心和 vendor 文件哈希，并发现缺失、改动或未列入清单的运行代码；不执行 reader、不连接来源、不读取索引或凭据。旧版无清单时完整性为 `unknown`，不能称为已验证。此安装检查用于识别版本漂移，df-mcp 继续负责资料访问、提取及索引验收。
+
 省略 `--output` 时，`scan` 和 `merge-evidence` 只返回 stdout。保存报告需先按 [文件访问](access.md) 确认输出目录，并在子命令前传 `--task-id $taskId --write-root $outputRoot --allow-operation output`，再指定全新 `--output` 路径。
 
 `scan` 可附 `--host-evidence` 或 `--bindings`。宿主证据必须来自当前会话实际观察，绑定必须是已确认的来源选择。使用 `validate` 检查报告，使用 `merge-evidence` 合并实际测试证据前先查看该版本 `--help` 及输入格式；合并只记录已经发生的测试，不执行测试。不能因文件扫描成功而伪造宿主发现。省略解释器或宿主证据时保留未测状态；输出报告不授予权限。
 
 检测器负责文件/解释器层事实；专业依赖、工具状态和真实结果在对应会话按任务补充。不要把结构检查器、手工构造报告或测试桩当成业务执行证据。
 
-插件清单与 marketplace 随版本 0.5.0 提供。文件存在、JSON 可解析和本地检查通过均不证明 GitHub 导入或成员安装成功。首次绑定与后续变化检查见 [首次设置](setup.md)。
+插件清单与 marketplace 随当前版本提供。文件存在、JSON 可解析和本地检查通过均不证明 GitHub 导入或成员安装成功。首次绑定与后续变化检查见 [首次设置](setup.md)。

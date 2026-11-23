@@ -6,6 +6,7 @@ param(
     [string]$HostEvidencePath,
     [string]$BindingsPath,
     [string]$EnvironmentPath,
+    [ValidateSet('csv', 'tsv', 'xlsx')][string]$InputFormat,
     [string]$SessionId = 'unspecified',
     [string]$TaskId,
     [string[]]$WriteRoot,

@@ -4,6 +4,8 @@
 
 改名前已配置的电脑保持兼容：未提供 `-StateDir` 时，优先使用 `DF-Agent\setup.local.json`；它不存在而旧目录 `%LOCALAPPDATA%\TeamAdvisor\setup.local.json` 存在时，直接沿用旧目录中的配置。两处都没有配置则选择新的 `DF-Agent` 目录；两处都有配置则新目录优先。明确的 `-StateDir` 始终优先。这个选择只判断两份专用配置是否存在，不合并、迁移、重置配置或读取记忆正文。后续记忆和反馈应沿用返回的实际 `state_dir`，不要仅因改名创建第二份数据。原有配置的 schema 标识保持兼容；名称变化不改变数据格式。
 
+本文件中的 `roots`、`preferred_sources` 是**技能安装来源**；不是公司资料库 profile。入口不保存第二份资料源目录，也不把技能设置 `unchanged` 当成 reader 或业务验收通过。资料范围与接入信息由 df-mcp 管理。
+
 ## 日常入口
 
 入口的 `scripts/setup.ps1 -Action Status` 默认只向 stdout 返回结果，会读取保存的解释器和技能根，在新进程重新执行公共文件检测，不要求用户记住路径或命令。没有配置则返回 `not_configured`，助手从当前宿主已提供的技能目录和真实运行环境选出待配置值；缺少会影响选择的信息才询问。

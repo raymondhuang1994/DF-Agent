@@ -1,6 +1,6 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "df-agent",
-  "version": "0.5.0",
-  "description": "DF Agent：按五条协作准则衔接资料、分析与 ETF 草稿；原资料只读，运行目录分离，输出和记忆按授权保存。"
+  "version": "0.6.0",
+  "description": "DF Agent：路由资料检索、DataLab 计算和 ETF 草稿，审核来源、覆盖与结论；资料只读，输出和经验按授权保存。"
 }

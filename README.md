@@ -1,12 +1,14 @@
-# DF Agent 0.5.0
+# DF Agent 0.6.0
 
-在当前 Windows 桌面软件的本地会话中，选择并衔接已安装的 DataLab、df-mcp 和 ETF 评论草稿 v2。本插件提供顾问入口、本机配置、任务质量反馈及有来源的个人/项目记忆；专业技能继续使用每台电脑现有的安装。
+在当前 Windows 桌面软件的本地会话中，作为 Router/Advisor 选择并衔接已安装的 df-mcp、DataLab 和 ETF 评论草稿 v2。df-mcp 负责来源目录、索引、检索和版本证据，DataLab 负责计算；入口负责选择流程、交接输入和审核结论，并保留本机配置、明确反馈及有来源的个人/项目记忆。
 
-公开项目：[GitHub 仓库](https://github.com/raymondhuang1994/DF-Agent) · [0.5.0 发布页](https://github.com/raymondhuang1994/DF-Agent/releases/tag/v0.5.0) · [安装说明](docs/LOCAL_INSTALL.md) · [试用与测试指南](docs/TRY_IT.md)
+公开项目：[GitHub 仓库](https://github.com/raymondhuang1994/DF-Agent) · [已发布版本](https://github.com/raymondhuang1994/DF-Agent/releases) · [安装说明](docs/LOCAL_INSTALL.md) · [试用与测试指南](docs/TRY_IT.md)
 
 原 TeamAdvisor 项目从 0.4.0 起统一命名为 **DF Agent**。新入口为 `$df-agent`，插件安装标识为 `df-agent@df-agent`；已有设置和记忆的兼容方式见 [改名与兼容说明](docs/RENAME_0.4.0.md)。
 
-0.5.0 增加五条协作准则，并采用“原资料只读、指定目录获授权写入”的文件策略。默认资料库是 `N:\digital finance`；索引、缓存、日志和临时文件使用每位同事本机 `%LOCALAPPDATA%\DF-Agent\runtime` 下的对应目录。首次只展示目录安排，用户确认后才创建运行目录；这不等于已连接或索引公司资料。详见 [规则与文件策略](docs/POLICY_0.5.0.md)。
+0.6.0 明确专业分工，并按实际能力消费 df-mcp 的来源目录与兼容证据包装，不建立第二份资料目录或 reader。新特性依赖所选 df-mcp 实际支持；已有原生配置和响应继续可用。检测器新增 reader 核心/依赖文件完整性检查，以及 CSV、TSV、XLSX 对应的 DataLab 依赖检查；这不代表资料可读或业务结论正确。
+
+沿用“原资料只读、指定目录获授权写入”的文件策略。旧版 `N:\digital finance` 仅保留为受保护资料根，不自动选为本轮来源；实际来源和运行目录由 df-mcp 的已确认配置确定。既有目录建议见 [0.5.0 规则与文件策略](docs/POLICY_0.5.0.md)，首次创建和索引仍遵循本轮授权。
 
 ## 可以做什么
 
@@ -38,7 +40,7 @@
 | 五条协作准则 | 先对齐、结论先行、局部修改、交付自检、原资料只读 |
 | 目录与操作授权 | 默认不写文件；按本任务授权限定目录及操作，索引与资料分离 |
 | 一次设置、后续复用 | 授权后保存技能根、来源和解释器；后续只读检测变化 |
-| 两种任务的质量核对 | 产品材料转评论、资金流数据转解释，各自核对事实、口径、数量和缺口 |
+| 证据与结论审核 | 对照来源范围、版本、分页、提取缺口和业务口径；保留 DataLab 原始校验状态 |
 | 明确反馈记录 | 记录采纳/修改/拒绝及用户原因，关联任务、产物和来源版本 |
 | 个人/项目记忆 | 候选与发布分离，按身份及项目读取，带来源、有效期和明确替代关系 |
 | 更正与遗忘 | 更新、范围内回退及删除；已删除内容不因回退复活 |
@@ -61,8 +63,10 @@ codex plugin add df-agent@df-agent --json
 ```powershell
 python -X utf8 -B -m unittest discover -s tests -v
 python -X utf8 -B tools/check_package.py
-python -X utf8 -B tools/check_package.py --zip '<项目外目录>\DF-Agent-Source-0.5.0.zip' --plugin-zip '<项目外目录>\DF-Agent-0.5.0.zip'
+python -X utf8 -B tools/check_package.py --zip '<项目外目录>\DF-Agent-Source-0.6.0.zip' --plugin-zip '<项目外目录>\DF-Agent-0.6.0.zip'
 ```
+
+0.6.0 当前源码完成 132 项本地回归（131 通过、1 跳过），新增检测的最后一次 15 项复验全部通过；技能结构和离线发布包校验通过。具体范围及尚未验证项目见 [0.6.0 验证](docs/VALIDATION_0.6.0.md)。
 
 0.5.0 完成本地 117 项回归（116 通过、1 项因本机权限跳过）、6 项跨进程记忆集成检查及 5 项独立行为测试，详见 [0.5.0 验证](docs/VALIDATION_0.5.0.md)。更多规则场景和手工验收标准见 [测试指南](docs/TRY_IT.md)，场景定义不等于已经执行。远端 CI 以对应提交的 [实际运行结果](https://github.com/raymondhuang1994/DF-Agent/actions) 为准。此前安装记录和合成业务结果保留在 [0.4.0 验收](docs/VALIDATION_0.4.0.md) 与 [历史验证报告](docs/VALIDATION.md)，不把旧测试改写成新版业务验收。
 
