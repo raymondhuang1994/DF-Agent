@@ -22,16 +22,8 @@ access = doctor.access
 CONFIG_SCHEMA = "team-advisor-setup/1"
 PLAN_SCHEMA = "team-advisor-setup-plan/1"
 CONFIG_NAME = "setup.local.json"
-PLUGIN_ROOT = Path(__file__).resolve().parents[3]
-
-
 def package_boundaries():
-    boundaries = [PLUGIN_ROOT]
-    for parent in PLUGIN_ROOT.parents:
-        if (parent / ".agents/plugins/marketplace.json").is_file():
-            boundaries.append(parent)
-            break
-    return boundaries
+    return access.package_boundaries()
 
 
 def external(path, roots=()):

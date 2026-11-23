@@ -38,8 +38,6 @@ WORKFLOWS = {"product_comments", "fund_flows"}
 OUTCOMES = {"accepted", "revised", "rejected"}
 CHECKS = {"passed", "failed", "not_checked"}
 MAX_INPUT_BYTES = 128 * 1024
-PLUGIN_ROOT = Path(__file__).resolve().parents[3]
-SOURCE_ROOT = Path(__file__).resolve().parents[5]
 
 
 class FeedbackError(ValueError):
@@ -164,10 +162,8 @@ def external_path(raw):
         if has_link(ancestor):
             raise FeedbackError("Feedback paths must not traverse links or reparse points")
     resolved = path.resolve()
-    if resolved.is_relative_to(PLUGIN_ROOT):
-        raise FeedbackError("Feedback state and exports must be outside the plugin")
-    if (SOURCE_ROOT / ".agents/plugins/marketplace.json").is_file() and resolved.is_relative_to(SOURCE_ROOT):
-        raise FeedbackError("Feedback state and exports must be outside the release repository")
+    if any(resolved.is_relative_to(boundary) for boundary in access.package_boundaries()):
+        raise FeedbackError("Feedback state and exports must be outside the plugin or skill package and release repository")
     return resolved
 
 

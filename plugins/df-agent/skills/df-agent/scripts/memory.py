@@ -245,11 +245,7 @@ class MemoryStore:
             raise MemoryError("--store must be an explicit absolute directory outside the plugin/repository")
         no_links(self.directory)
         self.directory = self.directory.resolve()
-        plugin = Path(__file__).resolve().parents[3]
-        repo = Path(__file__).resolve().parents[5]
-        boundaries = [plugin]
-        if (repo / ".agents/plugins/marketplace.json").exists():
-            boundaries.append(repo)
+        boundaries = access.package_boundaries()
         if any(self.directory.is_relative_to(boundary) for boundary in boundaries):
             raise MemoryError("Memory storage must be outside the plugin and source repository")
         if not isinstance(lock_timeout, (int, float)) or not 0 <= lock_timeout <= 60:
