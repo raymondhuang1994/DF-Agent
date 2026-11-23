@@ -17,6 +17,12 @@ codex plugin add df-agent@df-agent --json
 
 已有 `df-agent` 的电脑先检查 marketplace 当前来源，再按客户端实际支持的更新流程切换到实际选定版本并重新安装；不要重复注册同名 marketplace。新版入口不重建既有记忆。
 
+## SkillHub 完整包
+
+使用 `python tools/check_package.py --skill-package <仓库外路径>/DF-Agent-0.6.0.skill` 构建独立 Skill 包。它包含唯一的根级 `SKILL.md` 以及完整 `references/`、`scripts/`、`agents/`，与插件使用同一份源文件。选择 SkillHub 的 **ZIP / .skill** 上传入口；完整源码 ZIP 和插件 ZIP 各有自己的目录布局，不能替代此包。
+
+下载并安装时保留目录结构，核对发布版本和 SHA-256。SkillHub 分发脚本，不代为执行。独立 Skill 安装和插件安装都会将设置、记忆、反馈及运行状态放到已授权的包外目录。DF MCP、DataLab、评论草稿技能和 Python 解释器仍是外部依赖，不在入口包重复分发。
+
 ## 从旧入口升级
 
 先按上面的命令安装新 `df-agent` 来源与插件，保留旧入口供验证期间使用。核对 `codex plugin list --marketplace df-agent --json` 显示所选版本、已安装且启用，再在新会话确认 `$df-agent` 原生可见，并能读取本人原有的设置。只读检查不要重新初始化既有记忆库。

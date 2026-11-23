@@ -56,7 +56,7 @@ codex plugin marketplace add '<完整源码目录>' --json
 codex plugin add df-agent@df-agent --json
 ```
 
-具体安装、更新和新会话检查见 [安装说明](docs/LOCAL_INSTALL.md)。
+通过 SkillHub 分发时，使用根级 `SKILL.md` 的完整 `.skill` 包，保留参考文档、脚本和相对路径。构建命令：`python tools/check_package.py --skill-package <仓库外路径>/DF-Agent-0.6.0.skill`。具体安装、更新和新会话检查见 [安装说明](docs/LOCAL_INSTALL.md)。
 
 开发检查只需 Python 3.11+ 标准库：
 
@@ -66,7 +66,7 @@ python -X utf8 -B tools/check_package.py
 python -X utf8 -B tools/check_package.py --zip '<项目外目录>\DF-Agent-Source-0.6.0.zip' --plugin-zip '<项目外目录>\DF-Agent-0.6.0.zip'
 ```
 
-0.6.0 当前源码完成 132 项本地回归（131 通过、1 跳过），新增检测的最后一次 15 项复验全部通过；技能结构和离线发布包校验通过。具体范围及尚未验证项目见 [0.6.0 验证](docs/VALIDATION_0.6.0.md)。
+0.6.0 当前源码共 134 项本地回归，按整组及单项复验汇总为 133 通过、1 跳过，新增检测的最后一次 15 项复验全部通过；技能结构和离线发布包校验通过。具体范围及尚未验证项目见 [0.6.0 验证](docs/VALIDATION_0.6.0.md)。
 
 0.5.0 完成本地 117 项回归（116 通过、1 项因本机权限跳过）、6 项跨进程记忆集成检查及 5 项独立行为测试，详见 [0.5.0 验证](docs/VALIDATION_0.5.0.md)。更多规则场景和手工验收标准见 [测试指南](docs/TRY_IT.md)，场景定义不等于已经执行。远端 CI 以对应提交的 [实际运行结果](https://github.com/raymondhuang1994/DF-Agent/actions) 为准。此前安装记录和合成业务结果保留在 [0.4.0 验收](docs/VALIDATION_0.4.0.md) 与 [历史验证报告](docs/VALIDATION.md)，不把旧测试改写成新版业务验收。
 

@@ -101,14 +101,14 @@
     "skills/df-agent/references/runtime.md": "e9c3e34d70177739a41a576005d2961a1f94671b479f392f80e136e56cf7376b",
     "skills/df-agent/references/setup.md": "383a74ae40280944e67cf15359c624f6bfbf48fc49527770b63a47a20ff5c6dd",
     "skills/df-agent/references/sources-and-capabilities.md": "3977ffbf7a144ac28d9a2cde38d380fe08a395b70c74772263d9d136280906f8",
-    "skills/df-agent/scripts/access.py": "f2a2506d19ab06f3d35ecaf96fd452d7b434c30ba7af28f9b7ecaac9f6ec6246",
+    "skills/df-agent/scripts/access.py": "7e84c772e1bc40d87ec33ac8aba91a97dbd31da20cb2845d63d315698c4693e8",
     "skills/df-agent/scripts/doctor.ps1": "bd117d7ace1fae6b41679f4824820d823ac1f8fec8272f3fb9da8aedcbd0d6c2",
     "skills/df-agent/scripts/doctor.py": "5254a66d6489ea5e53122f4c243b4eea9f1891ef8cac032ed7e841d643935b2c",
-    "skills/df-agent/scripts/feedback.py": "074702c7788ebb8b93f735f249b5c48f9c42875410f3e0c42722d57c7f926c1b",
-    "skills/df-agent/scripts/memory.py": "f42768463c6511a86942f73996b8b032cb3d428b1d27a5eae504865036915f8a",
+    "skills/df-agent/scripts/feedback.py": "029a5340280c8ee678430bad530e698c02a13ca1ee131b6020a9b0141a391e9d",
+    "skills/df-agent/scripts/memory.py": "76d518bd3ca1afc24c8c64617b4af4c249e8514987a06d0b0122a61da398390f",
     "skills/df-agent/scripts/setup.ps1": "f8cf4d9110b158f50d94f660ea455c23a1a469a0303633501708517135a56a3e",
-    "skills/df-agent/scripts/setup.py": "3cf38526b42d57d8df9174f9fabdedacc7ead36ca0508c248090bb9d8adfb2dc",
-    "skills/df-agent/SKILL.md": "6e0cd707fc301458c9aecf600724f4ed2a2f115c9139046d0b0dad9eb2c2d312"
+    "skills/df-agent/scripts/setup.py": "69a4a72183e0aa11e52eae9936749c9a4e75e6e15c9bb59c21f6c62d43362133",
+    "skills/df-agent/SKILL.md": "58f2a8bb7d8a33ef39c95321bbbae91752b834ea2a332c309d95ddf859b3d61d"
   },
   "notes": [
     "Professional skill code and proprietary data are not redistributed in this release.",

@@ -147,6 +147,22 @@ def from_args(args):
     return WriteAccess(args.task_id, args.write_root, args.allow_operation, args.document_root)
 
 
+def package_boundaries():
+    """Locate the actual plugin or standalone skill, without fixed ancestor depth."""
+    skill = Path(__file__).resolve().parents[1]
+    container = skill.parent.parent
+    is_plugin = skill.parent.name == "skills" and (
+        (container / "plugin.json").is_file() or
+        (container / ".codex-plugin/plugin.json").is_file())
+    package = container if is_plugin else skill
+    boundaries = [package]
+    for parent in package.parents:
+        if (parent / ".agents/plugins/marketplace.json").is_file():
+            boundaries.append(parent)
+            break
+    return boundaries
+
+
 def runtime_layout(runtime_root=None, document_roots=()):
     if runtime_root is None:
         appdata = os.environ.get("LOCALAPPDATA")
@@ -155,12 +171,7 @@ def runtime_layout(runtime_root=None, document_roots=()):
         runtime_root = Path(appdata) / "DF-Agent" / "runtime"
     root = absolute(runtime_root)
     check_outside_sources(root, source_roots(document_roots), grant=True)
-    package = Path(__file__).resolve().parents[3]
-    boundaries = [package]
-    for parent in package.parents:
-        if (parent / ".agents/plugins/marketplace.json").is_file():
-            boundaries.append(parent)
-            break
+    boundaries = package_boundaries()
     if any(under(root, boundary) or under(boundary, root) for boundary in boundaries):
         raise AccessError("Runtime files must stay outside the plugin and release repository.")
     root = no_links(root)

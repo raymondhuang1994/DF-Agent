@@ -176,6 +176,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--zip", type=Path, help="Complete repository ZIP outside this project")
     parser.add_argument("--plugin-zip", type=Path, help="Entry plugin ZIP outside this project")
+    parser.add_argument("--skill-package", type=Path, help="Root-SKILL.md .skill or ZIP package outside this project")
     args = parser.parse_args()
     files, errors, manifest = check()
     if errors:
@@ -183,7 +184,8 @@ def main() -> int:
         return 1
     result = {"status": "passed", "version": manifest["version"], "files": len(files), "scope": "offline_release_contract", "remote_import_tested": False, "archives": []}
     try:
-        for destination, base in ((args.zip, ROOT), (args.plugin_zip, ROOT / PLUGIN)):
+        for destination, base in ((args.zip, ROOT), (args.plugin_zip, ROOT / PLUGIN),
+                                  (args.skill_package, ROOT / SKILL)):
             if destination:
                 members = [path for path in files if path.is_relative_to(base)]
                 digest = archive(destination, members, base)
